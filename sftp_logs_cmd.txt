@@ -1,0 +1,3 @@
+ls game/csgo/models
+ls game/csgo/sound
+quit
