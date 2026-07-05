@@ -47,35 +47,81 @@ end
 -- ─────────────────────────────────────────────
 -- Scan action bars to map spells/macros to keybinds
 -- ─────────────────────────────────────────────
+local slotBindings = {
+    [1] = "ACTIONBUTTON1", [2] = "ACTIONBUTTON2", [3] = "ACTIONBUTTON3", [4] = "ACTIONBUTTON4", [5] = "ACTIONBUTTON5", [6] = "ACTIONBUTTON6",
+    [7] = "ACTIONBUTTON7", [8] = "ACTIONBUTTON8", [9] = "ACTIONBUTTON9", [10] = "ACTIONBUTTON10", [11] = "ACTIONBUTTON11", [12] = "ACTIONBUTTON12",
+    [13] = "BONUSACTIONBUTTON1", [14] = "BONUSACTIONBUTTON2", [15] = "BONUSACTIONBUTTON3", [16] = "BONUSACTIONBUTTON4", [17] = "BONUSACTIONBUTTON5", [18] = "BONUSACTIONBUTTON6",
+    [19] = "BONUSACTIONBUTTON7", [20] = "BONUSACTIONBUTTON8", [21] = "BONUSACTIONBUTTON9", [22] = "BONUSACTIONBUTTON10", [23] = "BONUSACTIONBUTTON11", [24] = "BONUSACTIONBUTTON12",
+    [25] = "MULTIACTIONBAR3BUTTON1", [26] = "MULTIACTIONBAR3BUTTON2", [27] = "MULTIACTIONBAR3BUTTON3", [28] = "MULTIACTIONBAR3BUTTON4", [29] = "MULTIACTIONBAR3BUTTON5", [30] = "MULTIACTIONBAR3BUTTON6",
+    [31] = "MULTIACTIONBAR3BUTTON7", [32] = "MULTIACTIONBAR3BUTTON8", [33] = "MULTIACTIONBAR3BUTTON9", [34] = "MULTIACTIONBAR3BUTTON10", [35] = "MULTIACTIONBAR3BUTTON11", [36] = "MULTIACTIONBAR3BUTTON12",
+    [37] = "MULTIACTIONBAR4BUTTON1", [38] = "MULTIACTIONBAR4BUTTON2", [39] = "MULTIACTIONBAR4BUTTON3", [40] = "MULTIACTIONBAR4BUTTON4", [41] = "MULTIACTIONBAR4BUTTON5", [42] = "MULTIACTIONBAR4BUTTON6",
+    [43] = "MULTIACTIONBAR4BUTTON7", [44] = "MULTIACTIONBAR4BUTTON8", [45] = "MULTIACTIONBAR4BUTTON9", [46] = "MULTIACTIONBAR4BUTTON10", [47] = "MULTIACTIONBAR4BUTTON11", [48] = "MULTIACTIONBAR4BUTTON12",
+    [49] = "MULTIACTIONBAR2BUTTON1", [50] = "MULTIACTIONBAR2BUTTON2", [51] = "MULTIACTIONBAR2BUTTON3", [52] = "MULTIACTIONBAR2BUTTON4", [53] = "MULTIACTIONBAR2BUTTON5", [54] = "MULTIACTIONBAR2BUTTON6",
+    [55] = "MULTIACTIONBAR2BUTTON7", [56] = "MULTIACTIONBAR2BUTTON8", [57] = "MULTIACTIONBAR2BUTTON9", [58] = "MULTIACTIONBAR2BUTTON10", [59] = "MULTIACTIONBAR2BUTTON11", [60] = "MULTIACTIONBAR2BUTTON12",
+    [61] = "MULTIACTIONBAR1BUTTON1", [62] = "MULTIACTIONBAR1BUTTON2", [63] = "MULTIACTIONBAR1BUTTON3", [64] = "MULTIACTIONBAR1BUTTON4", [65] = "MULTIACTIONBAR1BUTTON5", [66] = "MULTIACTIONBAR1BUTTON6",
+    [67] = "MULTIACTIONBAR1BUTTON7", [68] = "MULTIACTIONBAR1BUTTON8", [69] = "MULTIACTIONBAR1BUTTON9", [70] = "MULTIACTIONBAR1BUTTON10", [71] = "MULTIACTIONBAR1BUTTON11", [72] = "MULTIACTIONBAR1BUTTON12",
+}
+
+local function GetBindingForSlot(slot)
+    if slotBindings[slot] then
+        return slotBindings[slot]
+    elseif slot >= 73 and slot <= 120 then
+        local btn = ((slot - 1) % 12) + 1
+        return "ACTIONBUTTON" .. btn
+    end
+    return nil
+end
+
+local function GetClassSpells()
+    local spells = {}
+    local classId = CoAAT_Engine and CoAAT_Engine.classId
+    if classId and CoAAT_Abilities and CoAAT_Abilities[classId] then
+        local classDef = CoAAT_Abilities[classId]
+        if classDef.specs then
+            for specName, specDef in pairs(classDef.specs) do
+                if specDef.abilities then
+                    for _, ab in ipairs(specDef.abilities) do
+                        if ab.name then
+                            spells[ab.name:lower()] = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return spells
+end
+
 function CoAAT_RotationHelper.UpdateKeybindCache()
     wipe(spellKeybinds)
     
-    local barConfigs = {
-        { prefix = "ActionButton", bind = "ACTIONBUTTON" },
-        { prefix = "MultiBarBottomLeftButton", bind = "MULTIBARBOTTOMLEFT" },
-        { prefix = "MultiBarBottomRightButton", bind = "MULTIBARBOTTOMRIGHT" },
-        { prefix = "MultiBarRightButton", bind = "MULTIBARRIGHT" },
-        { prefix = "MultiBarLeftButton", bind = "MULTIBARLEFT" }
-    }
-
-    for _, config in ipairs(barConfigs) do
-        for i = 1, 12 do
-            local buttonName = config.prefix .. i
-            local button = _G[buttonName]
-            if button and button.action then
-                local actionType, id = GetActionInfo(button.action)
-                local spellName = nil
-                
-                if actionType == "spell" then
-                    spellName = GetSpellInfo(id)
-                elseif actionType == "macro" then
-                    spellName = GetMacroSpell(id)
-                end
-                
-                if spellName then
-                    local bindingName = config.bind .. i
-                    local key = GetBindingKey(bindingName)
-                    spellKeybinds[spellName:lower()] = key and FormatKeybind(key) or "NO_BIND"
+    local classSpells = GetClassSpells()
+    
+    for slot = 1, 120 do
+        if HasAction(slot) then
+            local actionType, id = GetActionInfo(slot)
+            local bindingName = GetBindingForSlot(slot)
+            if bindingName then
+                local key = GetBindingKey(bindingName)
+                if key then
+                    local formattedKey = FormatKeybind(key)
+                    if actionType == "spell" then
+                        local spellName = GetSpellInfo(id)
+                        if spellName then
+                            spellKeybinds[spellName:lower()] = formattedKey
+                        end
+                    elseif actionType == "macro" then
+                        local mName, mIcon, mBody = GetMacroInfo(id)
+                        if mBody then
+                            local bodyLower = mBody:lower()
+                            -- Scan macro text to see if it casts any of our spec spells
+                            for spellName, _ in pairs(classSpells) do
+                                if bodyLower:find(spellName, 1, true) then
+                                    spellKeybinds[spellName] = formattedKey
+                                end
+                            end
+                        end
+                    end
                 end
             end
         end
