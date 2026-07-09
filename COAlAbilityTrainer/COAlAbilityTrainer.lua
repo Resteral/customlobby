@@ -200,6 +200,12 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     end
 end)
 
+eventFrame:SetScript("OnUpdate", function(self, elapsed)
+    if initialized and CoAAT_Engine and CoAAT_Engine.OnUpdate then
+        CoAAT_Engine.OnUpdate(elapsed)
+    end
+end)
+
 -- ─────────────────────────────────────────────────────────────
 -- Slash Commands  /coal  /coaat
 -- ─────────────────────────────────────────────────────────────

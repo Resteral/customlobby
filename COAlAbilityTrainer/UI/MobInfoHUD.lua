@@ -261,14 +261,10 @@ function CoAAT_MobInfoHUD.Refresh()
     -- Best approximation: use mouse position as mob is targeted by clicking.
     -- For a true nameplate attach, parse nameplate frames.
     local attached = false
-    for _, np in pairs(C_NamePlate and C_NamePlate.GetNamePlates and C_NamePlate.GetNamePlates() or {}) do
-        if np.namePlateUnitToken == unit or
-           (np.UnitFrame and np.UnitFrame.unit == unit) then
-            _frame:ClearAllPoints()
-            _frame:SetPoint("BOTTOM", np, "TOP", 0, 10)
-            attached = true
-            break
-        end
+    if CoAAT_TargetNameplateFrame and CoAAT_TargetNameplateFrame:IsShown() then
+        _frame:ClearAllPoints()
+        _frame:SetPoint("BOTTOM", CoAAT_TargetNameplateFrame, "TOP", 0, 15)
+        attached = true
     end
 
     if not attached then

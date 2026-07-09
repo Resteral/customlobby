@@ -139,8 +139,6 @@ function CoAAT_CombatHUD.Build()
     CoAAT_NameplateHUD.Build()  -- inject mini-HUD onto all nameplates
 
     hud:SetScript("OnUpdate", function(self, dt)
-        CoAAT_Engine.OnUpdate(dt)
-        
         -- Hide drag backgrounds during combat
         local inCombat = CoAAT_Engine.IsInCombat()
         local hideBorder = (CoAAT_DB and CoAAT_DB.hideDragBorder) or inCombat

@@ -857,12 +857,19 @@ end
 local function ScanNameplates(dt)
     if not (CoAAT_DB and CoAAT_DB.nameplateHUD ~= false) then
         for _,ov in pairs(_injected) do HideOverlay(ov) end
+        CoAAT_TargetNameplateFrame = nil
         return
     end
 
     local targetName = UnitExists("target") and UnitName("target") or nil
+    local targetHp = UnitExists("target") and UnitHealth("target") or 0
+    local targetMax = UnitExists("target") and UnitHealthMax("target") or 1
+    local targetHpPct = targetHp / math.max(1, targetMax)
+
     local kids = { WorldFrame:GetChildren() }
     local seen = {}
+    local bestTargetFrame = nil
+    local bestTargetAlpha = -1
 
     for _, frame in ipairs(kids) do
         if frame:IsShown() and not frame:GetName() then
@@ -872,14 +879,38 @@ local function ScanNameplates(dt)
                     local ov = BuildOverlay(frame)
                     if ov then _injected[frame] = ov end
                 end
-                local ov = _injected[frame]
-                if ov then
-                    ShowOverlay(ov)
+
+                if targetName then
                     local npName = GetNPName(frame)
-                    local isTgt  = (targetName and npName == targetName) and true or false
-                    RefreshOverlay(ov, isTgt, dt)
+                    if npName == targetName then
+                        local hp = GetNPHealthBar(frame)
+                        if hp then
+                            local cur, mn, mx = hp:GetValue(), hp:GetMinMaxValues()
+                            local range = (mx or 1) - (mn or 0)
+                            local npPct = range > 0 and ((cur - mn) / range) or 1.0
+
+                            if math.abs(npPct - targetHpPct) <= 0.015 then
+                                local alpha = frame:GetAlpha() or 1.0
+                                if alpha > bestTargetAlpha then
+                                    bestTargetAlpha = alpha
+                                    bestTargetFrame = frame
+                                end
+                            end
+                        end
+                    end
                 end
             end
+        end
+    end
+
+    CoAAT_TargetNameplateFrame = bestTargetFrame
+
+    for frame, _ in pairs(seen) do
+        local ov = _injected[frame]
+        if ov then
+            ShowOverlay(ov)
+            local isTgt = (frame == bestTargetFrame)
+            RefreshOverlay(ov, isTgt, dt)
         end
     end
 

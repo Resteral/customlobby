@@ -132,7 +132,7 @@ local function TryCreateMacro(name, icon, body)
         EditMacro(idx, name, icon, body)
         return true, "Updated existing macro: " .. name
     end
-    CreateMacro(name, icon, body, nil)
+    CreateMacro(name, icon, body, false)
     return true, "Created macro: " .. name
 end
 

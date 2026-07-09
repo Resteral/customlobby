@@ -1188,6 +1188,61 @@ function CoALevelGuide_MainFrame.BuildGearPanel(parent)
             yOff = yOff - localFrameHeight - 14
         end
 
+        -- ── SECTION DIVIDER ──
+        local divider4 = child:CreateTexture(nil, "OVERLAY")
+        divider4:SetSize(child:GetWidth() - 8, 2)
+        divider4:SetPoint("TOPLEFT", child, "TOPLEFT", 4, yOff)
+        divider4:SetTexture(0.55, 0.0, 0.85, 0.20)
+        yOff = yOff - 12
+
+        -- Profession Farming Header
+        local farmHeader = child:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        farmHeader:SetPoint("TOPLEFT", child, "TOPLEFT", 4, yOff)
+        farmHeader:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+        farmHeader:SetText("|cff00ccff🛠 Detailed Profession Leveling & Farming Paths|r")
+        yOff = yOff - 22
+
+        -- Profession Farming List
+        if CoALevelGuide_ProfessionFarmingPaths then
+            for _, path in ipairs(CoALevelGuide_ProfessionFarmingPaths) do
+                local pathFrame = CreateFrame("Frame", nil, child)
+                pathFrame:SetWidth(child:GetWidth() - 8)
+                pathFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 4, yOff)
+
+                local pHeader = pathFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                pHeader:SetPoint("TOPLEFT", pathFrame, "TOPLEFT", 8, -6)
+                pHeader:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+                pHeader:SetText("|cffFFD700" .. path.name .. "|r")
+
+                local stepsText = {}
+                for _, step in ipairs(path.steps) do
+                    table.insert(stepsText, "• " .. step)
+                end
+                local stepsStr = table.concat(stepsText, "\n")
+
+                local pSteps = pathFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                pSteps:SetPoint("TOPLEFT", pathFrame, "TOPLEFT", 12, -22)
+                pSteps:SetWidth(pathFrame:GetWidth() - 20)
+                pSteps:SetJustifyH("LEFT")
+                pSteps:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+                pSteps:SetText("|cffffffff" .. stepsStr .. "|r")
+
+                localFrameHeight = pSteps:GetStringHeight() + 32
+                pathFrame:SetHeight(localFrameHeight)
+
+                local pathBG = pathFrame:CreateTexture(nil, "BACKGROUND")
+                pathBG:SetAllPoints()
+                pathBG:SetTexture(0.04, 0.06, 0.12, 0.7)
+
+                local sideBorder = pathFrame:CreateTexture(nil, "OVERLAY")
+                sideBorder:SetSize(2, localFrameHeight)
+                sideBorder:SetPoint("TOPLEFT", pathFrame, "TOPLEFT", 0, 0)
+                sideBorder:SetTexture(0.55, 0.0, 0.85, 0.25)
+
+                yOff = yOff - localFrameHeight - 14
+            end
+        end
+
         child:SetHeight(math.abs(yOff) + 20)
     end
 

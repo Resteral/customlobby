@@ -225,3 +225,45 @@ CoALevelGuide_Professions = {
         bonus = "Master's Inscription (Shoulder: +120 Attack Power / +70 Spell Power)"
     }
 }
+
+CoALevelGuide_ProfessionFarmingPaths = {
+    {
+        name = "Mining & Engineering Farming Path",
+        steps = {
+            "Levels 1-75: Gather Copper Ore in starting zones (Elwynn / Durotar). Craft Rough Blasting Powder, Handful of Copper Bolts.",
+            "Levels 75-125: Gather Tin/Bronze in Westfall/Barrens. Craft Bronze Tubes, Whirring Bronze Gizmos.",
+            "Levels 125-175: Gather Iron in Redridge/Arathi. Craft Heavy Blasting Powder, Iron Grenades.",
+            "Levels 175-230: Gather Mithril in Tanaris/Badlands. Craft Mithril Casings, Solid Blasting Powder.",
+            "Levels 230-300: Gather Thorium in Un'Goro/EPL. Craft Thorium Widgets, Thorium Shells."
+        }
+    },
+    {
+        name = "Herbalism & Alchemy Farming Path",
+        steps = {
+            "Levels 1-75: Peacebloom & Silverleaf in starting zones. Craft Minor Healing Potions.",
+            "Levels 75-150: Mageroyal & Briarthorn in Westfall/Barrens. Craft Lesser Healing Potions, Elixir of Wisdom.",
+            "Levels 150-225: Goldthorn & Fadeleaf in Duskwood/STV. Craft Elixir of Agility, Mana Potions.",
+            "Levels 225-285: Sungrass & Blindweed in Feralas/Zul'Farrak. Craft Superior Healing Potions, Elixir of Greater Intellect.",
+            "Levels 285-300: Mountain Silversage & Dreamfoil in EPL/Winterspring. Craft Major Mana Potions, Elixir of Mongoose."
+        }
+    },
+    {
+        name = "Skinning & Leatherworking Farming Path",
+        steps = {
+            "Levels 1-75: Skin beasts level 1-15 in starter areas. Craft Ruined Leather Scraps into Light Leather. Craft Light Armor Kits.",
+            "Levels 75-150: Skin beasts level 15-25 in Westfall/Barrens. Craft Medium Armor Kits, Cured Medium Hide.",
+            "Levels 150-225: Skin beasts level 25-35 in Duskwood/STV. Craft Heavy Armor Kits, Dusky Leather Leggings.",
+            "Levels 225-300: Skin beasts level 35-50 in Feralas/Un'Goro. Craft Thick Armor Kits, Rugged Armor Kits, Wicked Leather Headband."
+        }
+    },
+    {
+        name = "Woodworking Farming Path (Custom CoA)",
+        steps = {
+            "Levels 1-75: Gather Copperwood logs in starting areas. Craft Copperwood Relic Shards & Copperwood Staves.",
+            "Levels 75-150: Gather Silverwood logs in Westfall/Barrens. Craft Silverwood Relics, Polished Staff.",
+            "Levels 150-225: Gather Ironwood logs in Redridge/Ashenvale. Craft Ironwood Totems, Reinforced Staff.",
+            "Levels 225-300: Gather Ghostwood logs in EPL/Silithus. Craft Ghostwood Relics, Ascended Staff."
+        }
+    }
+}
+
