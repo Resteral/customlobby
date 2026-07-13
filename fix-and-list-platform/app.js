@@ -139,72 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedLeads) {
         leads = JSON.parse(savedLeads);
     } else {
-        leads = [
-            {
-                id: 'lead-default-1',
-                name: 'Eleanor Vance',
-                email: 'evance@email.com',
-                phone: '(555) 890-1234',
-                address: '882 Whispering Pines Dr',
-                asIsValue: 390000,
-                targetARV: 485000,
-                commissionRate: 6,
-                stage: 'rehab',
-                notes: 'Contract signed. Kitchen remodel and flooring upgrade are currently underway by our contractor network.',
-                scope: ['kitchen', 'flooring', 'landscaping'],
-                workExplanations: {
-                    kitchen: 'Cabinets are yellowing honey oak and need full replacement; laminate countertops are chipped near the sink.',
-                    flooring: 'Rip out stained carpets in primary bedroom and lay modern wide-plank wood flooring.',
-                    landscaping: 'Mow overgrown front lawn and lay fresh dark cedar mulch in all front beds.'
-                },
-                dispatches: { kitchen: 'con-4', flooring: 'con-3', landscaping: 'con-2' },
-                completedSubtasks: ['kit-1', 'kit-2', 'floor-1', 'land-1', 'land-2'],
-                signature: {
-                    date: '2026-07-11, 10:15:30 AM',
-                    ip: '192.168.1.145',
-                    hash: 'E8A91B012F4F7C770D6A9F7623910A92FFC1405A',
-                    typedName: 'Eleanor Vance'
-                }
-            },
-            {
-                id: 'lead-default-2',
-                name: 'Thomas Shelby',
-                email: 'tshelby@shelbyco.com',
-                phone: '(555) 901-2345',
-                address: '104 Garrison Lane',
-                asIsValue: 290000,
-                targetARV: 370000,
-                commissionRate: 5.5,
-                stage: 'valuation',
-                notes: 'Lead submitted via website calculator. Scheduling virtual site walkthrough to draft rehab proposal.',
-                scope: ['paint', 'landscaping', 'hvac'],
-                workExplanations: {
-                    paint: 'Living room walls are smoke stained and need a fresh light neutral coat.',
-                    landscaping: 'Spruce up front brick walkway, clear weeds, and pressure wash the rear stone patio.'
-                },
-                dispatches: {},
-                completedSubtasks: []
-            },
-            {
-                id: 'lead-default-3',
-                name: 'Clara Oswald',
-                email: 'clara.os@time.org',
-                phone: '(555) 112-2334',
-                address: '775 Windhill Terrace',
-                asIsValue: 550000,
-                targetARV: 680000,
-                commissionRate: 6,
-                stage: 'agreement',
-                notes: 'Listing agreement sent. Premium package proposed (full kitchen, master bath, flooring). Waiting on signature.',
-                scope: ['kitchen', 'bathroom', 'flooring', 'paint'],
-                workExplanations: {
-                    kitchen: 'Old laminate cabinets are sticky, double sink is cracked white ceramic.',
-                    bathroom: 'Outdated pink floral tiling, rusty bathtub fixtures, and vanity cabinet drawer guide is broken.'
-                },
-                dispatches: {},
-                completedSubtasks: []
-            }
-        ];
+        leads = [];
         saveLeadsToStorage();
     }
 
@@ -213,13 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedContractors) {
         contractors = JSON.parse(savedContractors);
     } else {
-        contractors = [
-            { id: 'con-1', name: 'Apex Painting & Decor', trade: 'Paint', rating: 4.8, phone: '(555) 123-4567', status: 'active', assignments: 2 },
-            { id: 'con-2', name: 'GreenScapes Landscaping', trade: 'Landscaping', rating: 4.6, phone: '(555) 234-5678', status: 'active', assignments: 1 },
-            { id: 'con-3', name: 'FloorCraft Flooring Co', trade: 'Flooring', rating: 4.9, phone: '(555) 345-6789', status: 'active', assignments: 3 },
-            { id: 'con-4', name: 'Elite Kitchens & Bath', trade: 'Kitchen', rating: 5.0, phone: '(555) 456-7890', status: 'busy', assignments: 1 },
-            { id: 'con-5', name: 'Precision Plumbers LLC', trade: 'Bathroom', rating: 4.7, phone: '(555) 567-8901', status: 'active', assignments: 1 }
-        ];
+        contractors = [];
         saveContractorsToStorage();
     }
 
@@ -228,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedComps) {
         comps = JSON.parse(savedComps);
     } else {
-        comps = [...MOCK_COMPS];
+        comps = [];
         saveCompsToStorage();
     }
 
@@ -237,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedProspects) {
         prospects = JSON.parse(savedProspects);
     } else {
-        prospects = [...MOCK_PROSPECTS];
+        prospects = [];
         saveProspectsToStorage();
     }
 
@@ -246,10 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedAdCampaigns) {
         adCampaigns = JSON.parse(savedAdCampaigns);
     } else {
-        adCampaigns = [
-            { id: 'ad-default-1', property: '882 Whispering Pines Dr', channel: 'instagram', budget: 50, impressions: 1420, clicks: 180, leads: 3 },
-            { id: 'ad-default-2', property: '104 Garrison Lane', channel: 'facebook', budget: 25, impressions: 840, clicks: 92, leads: 1 }
-        ];
+        adCampaigns = [];
         saveAdCampaignsToStorage();
     }
 
@@ -261,9 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedEmailLogs) {
         emailLogs = JSON.parse(savedEmailLogs);
     } else {
-        emailLogs = [
-            { id: 'log-default-1', time: '2026-07-11 11:20 AM', recipient: 'tshelby@shelbyco.com', type: 'Intake Alert', subject: 'Revitalize Value Assessment - 104 Garrison Lane', body: 'We have received your valuation inquiry for 104 Garrison Lane...' }
-        ];
+        emailLogs = [];
         localStorage.setItem('revitalize_email_logs', JSON.stringify(emailLogs));
     }
 
@@ -560,10 +484,10 @@ function openClientPortal(leadId) {
         return sum + (item ? item.discounted : 0);
     }, 0);
     const commVal = lead.targetARV * ((lead.commissionRate || 6) / 100);
-    const estPayout = lead.targetARV - totalDiscountedRehab - commVal;
+    const estPayout = lead.targetARV - (totalDiscountedRehab / 2) - commVal;
 
     document.getElementById('client-stat-arv').innerText = `$${lead.targetARV.toLocaleString()}`;
-    document.getElementById('client-stat-rehab').innerText = `$${totalDiscountedRehab.toLocaleString()}`;
+    document.getElementById('client-stat-rehab').innerText = `$${Math.round(totalDiscountedRehab / 2).toLocaleString()}`;
     document.getElementById('client-stat-payout').innerText = `$${Math.round(estPayout).toLocaleString()}`;
 
     // Render Progress Tracker steps
@@ -1213,26 +1137,26 @@ function triggerAutoEmail(lead, type, extraDetail = '') {
     }, 0);
 
     const commissionVal = lead.targetARV * ((lead.commissionRate || 6) / 100);
-    const estPayout = lead.targetARV - totalRehab - commissionVal;
+    const estPayout = lead.targetARV - (totalRehab / 2) - commissionVal;
 
     if (type === 'Intake Confirmation') {
         subject = `Revitalize Project Evaluation: ${lead.address}`;
-        body = `Hello ${lead.name},\n\nWe have received your request to list your property at ${lead.address} under our Fix-and-List program. Based on your inputs, we estimate an After-Repair Value (ARV) of $${lead.targetARV.toLocaleString()} following renovations. Our pre-approved discounted rehab budget is $${totalRehab.toLocaleString()}. At closing, we estimate your Net Payout will be $${Math.round(estPayout).toLocaleString()}. An agent will contact you shortly to schedule a walkthrough.`;
+        body = `Hello ${lead.name},\n\nWe have received your request to list your property at ${lead.address} under our Fix-and-List program. Based on your inputs, we estimate an After-Repair Value (ARV) of $${lead.targetARV.toLocaleString()} following renovations. Our pre-approved discounted rehab budget is $${totalRehab.toLocaleString()} (with 50% paid upfront during construction and 50% deferred to sale closing). At closing, we estimate your Net Payout will be $${Math.round(estPayout).toLocaleString()}. An agent will contact you shortly to schedule a walkthrough.`;
     } else if (type === 'Agreement Delivery') {
         subject = `Listing and Rehabilitation Proposal: ${lead.address}`;
-        body = `Hello ${lead.name},\n\nWe have compiled your digital exclusive listing agreement for ${lead.address}. The renovation capital allocation has been finalized at $${totalRehab.toLocaleString()} with an estimated commission listing rate of ${lead.commissionRate || 6}%. You can review, print, or execute the agreement from your client portal.`;
+        body = `Hello ${lead.name},\n\nWe have compiled your digital exclusive listing agreement for ${lead.address}. The renovation capital allocation has been finalized at $${totalRehab.toLocaleString()} (50% paid upfront, 50% deferred to closing) with an estimated commission listing rate of ${lead.commissionRate || 6}%. You can review, print, or execute the agreement from your client portal.`;
     } else if (type === 'Rehab Started') {
         subject = `Renovation Commenced at ${lead.address}`;
-        body = `Hello ${lead.name},\n\nGreat news! We have officially dispatched vetted contractors to begin the renovations at ${lead.address}. Subcontractors will begin working on the selected scope of work including: ${lead.scope.join(', ')}. We will email you milestones as they are completed.`;
+        body = `Hello ${lead.name},\n\nGreat news! We have officially dispatched vetted contractors to begin the renovations at ${lead.address}. Subcontractors will begin working on the selected SOW items: ${lead.scope.join(', ')}.\n\nReminder: Under our 50/50 payment split terms, 50% ($${(totalRehab / 2).toLocaleString()}) is billed upfront during construction, with the remaining 50% deferred interest-free to sale closing.`;
     } else if (type === 'Flyer Delivery') {
         subject = `Equity Lift Assessment Report: ${lead.address}`;
-        body = `Hello ${lead.name},\n\nAttached is your custom Equity Lift presentation flyer comparing an As-Is MLS sale vs. our interest-free Fix-and-List program. Renovation upgrades have been designed to capture an estimated $${(lead.targetARV - lead.asIsValue).toLocaleString()} in gross equity lift.`;
+        body = `Hello ${lead.name},\n\nAttached is your custom Equity Lift presentation flyer comparing an As-Is MLS sale vs. our 50/50 split Fix-and-List program. Renovation upgrades have been designed to capture an estimated $${(lead.targetARV - lead.asIsValue).toLocaleString()} in gross equity lift.`;
     } else if (type === 'Milestone Completed') {
         subject = `Rehab Progress Update: ${lead.address}`;
         body = `Hello ${lead.name},\n\nWe are pleased to report that the construction phase [${extraDetail}] has been successfully completed and inspected at your property ${lead.address}. We remain on track with schedule and budget parameters.`;
     } else if (type === 'Contract Signed Notification') {
         subject = `Agreement Executed: ${lead.address}`;
-        body = `Hello ${lead.name},\n\nThank you! Your Exclusive Listing and Rehabilitation Agreement has been successfully digitally signed and locked. The security seal SHA-256 certificate has been logged, and construction scheduling is now underway.`;
+        body = `Hello ${lead.name},\n\nThank you! Your Exclusive Listing and Rehabilitation Agreement has been successfully digitally signed and locked under our 50/50 split terms. The security seal SHA-256 certificate has been logged, and construction scheduling is now underway.`;
     }
 
     const log = {
@@ -1272,7 +1196,7 @@ function renderAnalyticsDashboard() {
         }, 0);
 
         if (lead.stage === 'rehab' || lead.stage === 'listed') {
-            activeRenovationCapital += leadRehabCost;
+            activeRenovationCapital += (leadRehabCost / 2);
         }
 
         if (lead.stage !== 'closed') {
@@ -2255,9 +2179,14 @@ function renderSellerFlyer() {
                             <td>$${lead.targetARV.toLocaleString()}</td>
                         </tr>
                         <tr>
-                            <td>Renovation Cost</td>
-                            <td>$0 (None)</td>
-                            <td>-$${totalDiscountedRehab.toLocaleString()}</td>
+                            <td>Upfront Rehab Cost (50%)</td>
+                            <td>$0</td>
+                            <td>-$${(totalDiscountedRehab / 2).toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td>Deferred Rehab Cost (50%)</td>
+                            <td>$0</td>
+                            <td>-$${(totalDiscountedRehab / 2).toLocaleString()}</td>
                         </tr>
                         <tr>
                             <td>Broker Commission</td>
@@ -2301,7 +2230,7 @@ function renderSellerFlyer() {
         <div class="flyer-sub-box" style="width: 100%; margin-bottom: 1.5rem;">
             <h4>Why Listing with Revitalize Works:</h4>
             <ul style="margin-bottom:0;">
-                <li><strong>No Out-of-Pocket Expense:</strong> We advance 100% of the renovation capital interest-free.</li>
+                <li><strong>50/50 Split Funding:</strong> You pay only 50% upfront during construction, with the remaining 50% interest-free deferred to sale closing.</li>
                 <li><strong>Network Savings Passed To You:</strong> Our bulk contractor network rates are 20-30% below retail contractors.</li>
                 <li><strong>Stress-Free Execution:</strong> We manage materials sourcing, scheduling, permitting, and listing marketing.</li>
             </ul>
@@ -2483,8 +2412,10 @@ function renderSlideDeck() {
     const ownerAsIsPayout = lead.asIsValue - standardAsIsCommission;
 
     const commissionVal = lead.targetARV * ((lead.commissionRate || 6) / 100);
-    const ownerFinalPayout = lead.targetARV - totalDiscountedRehab - commissionVal;
-    const profitLift = ownerFinalPayout - ownerAsIsPayout;
+    const ownerFinalPayout = lead.targetARV - (totalDiscountedRehab / 2) - commissionVal;
+    
+    const totalNetReturn = lead.targetARV - totalDiscountedRehab - commissionVal;
+    const profitLift = totalNetReturn - ownerAsIsPayout;
 
     const liftEl = document.getElementById('slide-stat-lift');
     if (profitLift > 0) {
@@ -3121,13 +3052,14 @@ function renderClientSettlement(lead) {
 
     const commissionVal = arv * (commRate / 100);
     const escrowFees = arv * 0.015;
-    const netProceeds = arv - rehabDiscounted - commissionVal - escrowFees;
+    const netProceeds = arv - (rehabDiscounted / 2) - commissionVal - escrowFees;
 
     const standardAsIsCommission = asIs * 0.06;
     const standardAsIsEscrow = asIs * 0.015;
     const netAsIsProceeds = asIs - standardAsIsCommission - standardAsIsEscrow;
 
-    const equityLift = netProceeds - netAsIsProceeds;
+    const totalNetReturn = arv - rehabDiscounted - commissionVal - escrowFees;
+    const equityLift = totalNetReturn - netAsIsProceeds;
 
     const html = `
         <table class="settlement-hud-table" style="width:100%; border-collapse:collapse; font-size:0.75rem;">
@@ -3151,9 +3083,14 @@ function renderClientSettlement(lead) {
                     <td style="padding:0.4rem 0; font-weight:700; color:var(--primary);" colspan="3">200. Reductions in Amount Due</td>
                 </tr>
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
-                    <td>Rehab Capital Advanced</td>
-                    <td style="text-align:right; color:var(--danger);">$${rehabDiscounted.toLocaleString()}</td>
+                    <td>Rehab Capital Deferred to Closing (50%)</td>
+                    <td style="text-align:right; color:var(--danger);">$${(rehabDiscounted / 2).toLocaleString()}</td>
                     <td></td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.03); opacity:0.6;">
+                    <td>Rehab Capital Paid Upfront (50%)</td>
+                    <td style="text-align:right;">$${(rehabDiscounted / 2).toLocaleString()}*</td>
+                    <td>(Already Settled)</td>
                 </tr>
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
                     <td>Real Estate Commission (${commRate}%)</td>
@@ -3169,7 +3106,7 @@ function renderClientSettlement(lead) {
                     <td style="padding:0.4rem 0; font-weight:700; color:var(--primary);" colspan="3">300. Summary Proceeds</td>
                 </tr>
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.05); font-weight:700;">
-                    <td>Your Est Net Payout</td>
+                    <td>Est Net Closing Proceeds Payout</td>
                     <td></td>
                     <td style="text-align:right; color:var(--success); font-size:0.85rem;">$${Math.round(netProceeds).toLocaleString()}</td>
                 </tr>
