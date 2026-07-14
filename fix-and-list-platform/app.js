@@ -122,6 +122,12 @@ let prospects = [];
 let contractors = [];
 let adCampaigns = [];
 let emailLogs = [];
+let laborBusinesses = [];
+let workRequests = [];
+let crewAllocations = {};
+let materialsLists = {};
+let chatMessages = {};
+
 let emailSettings = { autoIntake: true, autoRehab: true, autoContract: true };
 let apiSettings = {
     emailProvider: 'webhook',
@@ -253,6 +259,138 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('revitalize_api_settings', JSON.stringify(apiSettings));
     }
 
+    // Load Labor Businesses
+    try {
+        const savedLabor = localStorage.getItem('revitalize_labor_businesses');
+        if (savedLabor) {
+            laborBusinesses = JSON.parse(savedLabor);
+        } else {
+            laborBusinesses = [
+                {
+                    id: 'biz-plumbing-1',
+                    name: 'Apex Plumbing & Drain Services',
+                    trade: 'plumbing',
+                    rate: 95,
+                    email: 'apex@plumbing.com',
+                    webhook: 'https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped',
+                    sponsored: true,
+                    rating: 4.9,
+                    distance: 1.2,
+                    reviews: [
+                        { author: 'Clara Oswald', rating: 5, text: 'Clean work and highly professional. Unclogged our main sewer line instantly!' },
+                        { author: 'Danny Pink', rating: 5, text: 'Fast response and very fair pricing for the emergency call.' }
+                    ],
+                    photos: [
+                        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=400&q=80',
+                        'https://images.unsplash.com/photo-1581094288338-2314dddb7eed?auto=format&fit=crop&w=400&q=80'
+                    ]
+                },
+                {
+                    id: 'biz-electric-1',
+                    name: 'VoltStar Electrical & Lighting',
+                    trade: 'electrician',
+                    rate: 110,
+                    email: 'voltstar@electric.com',
+                    webhook: 'https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped',
+                    sponsored: false,
+                    rating: 4.7,
+                    distance: 3.4,
+                    reviews: [
+                        { author: 'Martha Jones', rating: 4, text: 'Rewired our new addition safely. Kept to the schedule!' }
+                    ],
+                    photos: [
+                        'https://images.unsplash.com/photo-1621905252507-b354bc25edac?auto=format&fit=crop&w=400&q=80'
+                    ]
+                },
+                {
+                    id: 'biz-carpentry-1',
+                    name: 'Oakwood Finish Carpentry',
+                    trade: 'carpentry',
+                    rate: 85,
+                    email: 'oakwood@carpentry.com',
+                    webhook: 'https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped',
+                    sponsored: true,
+                    rating: 4.8,
+                    distance: 2.1,
+                    reviews: [
+                        { author: 'Sarah Jane', rating: 5, text: 'Built custom built-in bookshelves. The craftsmanship is breathtaking.' }
+                    ],
+                    photos: [
+                        'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=400&q=80'
+                    ]
+                },
+                {
+                    id: 'biz-hvac-1',
+                    name: 'Breeze Mechanical Air & HVAC',
+                    trade: 'hvac',
+                    rate: 90,
+                    email: 'breeze@hvac.com',
+                    webhook: 'https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped',
+                    sponsored: false,
+                    rating: 4.6,
+                    distance: 4.5,
+                    reviews: [
+                        { author: 'Rory Williams', rating: 5, text: 'Serviced our heat pump before winter. Incredibly thorough checklist.' }
+                    ],
+                    photos: [
+                        'https://images.unsplash.com/photo-1605647540924-852290f6b0d5?auto=format&fit=crop&w=400&q=80'
+                    ]
+                }
+            ];
+            localStorage.setItem('revitalize_labor_businesses', JSON.stringify(laborBusinesses));
+        }
+    } catch (e) {
+        console.error("Labor businesses parse error:", e);
+    }
+
+    // Load Homeowner Work Requests
+    try {
+        const savedRequests = localStorage.getItem('revitalize_work_requests');
+        if (savedRequests) {
+            workRequests = JSON.parse(savedRequests);
+        } else {
+            workRequests = [
+                {
+                    id: 'req-1',
+                    address: '504 Cedar Rd',
+                    trade: 'electrician',
+                    budget: 1500,
+                    desc: 'Need new kitchen GFCI outlets installed and dedicated panel circuit wired.',
+                    owner: 'Alice Smith',
+                    email: 'alice@smithmail.com',
+                    timestamp: new Date(Date.now() - 3600000 * 4).toLocaleString()
+                },
+                {
+                    id: 'req-2',
+                    address: '891 Oak Ridge Rd',
+                    trade: 'plumbing',
+                    budget: 800,
+                    desc: 'Bathtub faucet is leaking inside the wall. Need drywall cut and valve replaced.',
+                    owner: 'Bob Johnson',
+                    email: 'bob@johnson.com',
+                    timestamp: new Date(Date.now() - 3600000 * 24).toLocaleString()
+                }
+            ];
+            localStorage.setItem('revitalize_work_requests', JSON.stringify(workRequests));
+        }
+    } catch (e) {
+        console.error("Work requests parse error:", e);
+    }
+
+    // Load UTool Assignments & Materials
+    try {
+        const savedCrew = localStorage.getItem('revitalize_crew_allocations');
+        if (savedCrew) crewAllocations = JSON.parse(savedCrew);
+        
+        const savedMats = localStorage.getItem('revitalize_materials_lists');
+        if (savedMats) materialsLists = JSON.parse(savedMats);
+
+        const savedChats = localStorage.getItem('revitalize_chat_messages');
+        if (savedChats) chatMessages = JSON.parse(savedChats);
+    } catch (e) {
+        console.error("UTool parse error:", e);
+    }
+
     document.getElementById('api-email-provider').value = apiSettings.emailProvider || 'webhook';
     document.getElementById('api-emailjs-public').value = apiSettings.emailjsPublic || '';
     document.getElementById('api-emailjs-service').value = apiSettings.emailjsService || '';
@@ -348,6 +486,16 @@ function switchView(viewName) {
         document.getElementById('view-market').classList.add('active');
         document.getElementById('btn-market').classList.add('active');
         renderPublicCatalog();
+    } else if (viewName === 'labor') {
+        document.getElementById('view-labor').classList.add('active');
+        document.getElementById('btn-labor').classList.add('active');
+        renderLaborDirectory();
+        renderJobRequestsFeed();
+    } else if (viewName === 'utool') {
+        document.getElementById('view-utool').classList.add('active');
+        document.getElementById('btn-utool').classList.add('active');
+        populateUtoolLeadSelect();
+        renderUtoolDashboard();
     } else {
         document.getElementById('view-dashboard').classList.add('active');
         document.getElementById('btn-dashboard').classList.add('active');
@@ -4377,4 +4525,730 @@ function autoScanForListings() {
     renderProspectsList();
 
     showToast(`Radar Scan Complete! Found ${count} motivated houses.`);
+}
+
+// ================= LABOR & TRADES MARKETPLACE =================
+function renderLaborDirectory() {
+    const list = document.getElementById('labor-directory-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const filterTrade = document.getElementById('directory-filter-trade').value;
+    const sortBy = document.getElementById('directory-sort-by').value;
+
+    // Filter
+    let filtered = [...laborBusinesses];
+    if (filterTrade !== 'all') {
+        filtered = filtered.filter(b => b.trade === filterTrade);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+        if (sortBy === 'sponsored') {
+            const valA = a.sponsored ? 1 : 0;
+            const valB = b.sponsored ? 1 : 0;
+            return valB - valA; // Sponsored first
+        } else if (sortBy === 'distance') {
+            return (a.distance || 5) - (b.distance || 5);
+        } else if (sortBy === 'rating') {
+            return (b.rating || 0) - (a.rating || 0);
+        }
+        return 0;
+    });
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="text-muted" style="text-align:center; padding:3rem;">No local businesses found matching filters.</div>';
+        return;
+    }
+
+    filtered.forEach(biz => {
+        const item = document.createElement('div');
+        item.className = 'glass-card';
+        
+        // Sponsored styling
+        const isSponsored = biz.sponsored || (biz.tier === 'sponsored');
+        if (isSponsored) {
+            item.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(236,72,153,0.03) 100%)';
+            item.style.borderColor = 'rgba(245,158,11,0.4)';
+        } else {
+            item.style.background = 'rgba(255,255,255,0.01)';
+        }
+        item.style.padding = '1.25rem';
+        item.style.marginBottom = '0.5rem';
+
+        const sponsorBadge = isSponsored 
+            ? `<span style="font-size:0.6rem; font-weight:700; color:var(--warning); background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); padding:0.15rem 0.4rem; border-radius:4px; margin-left:0.5rem; display:inline-flex; align-items:center; gap:2px;"><i data-lucide="sparkles" style="width:10px;height:10px;"></i> Sponsored Boost</span>` 
+            : '';
+
+        // Showcase Photos Grid
+        let photosHtml = '';
+        if (biz.photos && biz.photos.length > 0) {
+            photosHtml = `
+                <div style="margin-top:0.75rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    ${biz.photos.map(url => `
+                        <div style="width:70px; height:70px; border-radius:4px; overflow:hidden; border:1px solid var(--border-color); cursor:pointer;" onclick="openImageWindow('${url}')">
+                            <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Reviews Display List
+        let reviewsListHtml = '';
+        if (biz.reviews && biz.reviews.length > 0) {
+            reviewsListHtml = biz.reviews.map(r => `
+                <div style="padding:0.5rem; background:rgba(255,255,255,0.02); border-radius:4px; border:1px solid rgba(255,255,255,0.03); font-size:0.75rem; margin-top:0.4rem;">
+                    <div style="display:flex; justify-content:space-between; font-weight:600; color:white;">
+                        <span>${r.author}</span>
+                        <span style="color:var(--warning);">${'★'.repeat(r.rating)}</span>
+                    </div>
+                    <div style="color:var(--text-muted); margin-top:0.25rem;">"${r.text}"</div>
+                </div>
+            `).join('');
+        } else {
+            reviewsListHtml = '<p style="font-size:0.75rem; color:var(--text-muted); margin:0.5rem 0 0 0;">No reviews yet. Be the first to leave one!</p>';
+        }
+
+        item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                    <h4 style="margin:0; font-size:1rem; font-weight:700; color:white; display:flex; align-items:center;">
+                        <span>${biz.name}</span>
+                        ${sponsorBadge}
+                    </h4>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.8rem; color:var(--text-muted);">
+                        Trade: <span class="text-gradient" style="text-transform:capitalize; font-weight:600;">${biz.trade}</span> • Rate: <strong>$${biz.rate}/hr</strong> • Distance: <strong>${biz.distance || '2.3'} mi</strong>
+                    </p>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.25rem; font-size:0.8rem; font-weight:700; color:var(--warning);">
+                    <i data-lucide="star" style="width:14px; height:14px; fill:var(--warning);"></i>
+                    <span>${biz.rating || '4.5'}</span>
+                    <span style="color:var(--text-muted); font-weight:normal;">(${biz.reviews ? biz.reviews.length : 0} Reviews)</span>
+                </div>
+            </div>
+
+            <!-- Photos Showcase -->
+            ${photosHtml}
+
+            <!-- Expandable reviews drawer button -->
+            <button class="btn-secondary btn-sm" onclick="toggleBizDetailsDrawer('${biz.id}')" style="margin-top:0.75rem; font-size:0.7rem; padding:0.25rem 0.6rem; color:white; display:flex; align-items:center; gap:0.25rem;">
+                <i data-lucide="message-square" style="width:12px;height:12px;"></i> View & Post Reviews / Work Photos
+            </button>
+
+            <!-- Expanded Details Drawer -->
+            <div id="biz-details-${biz.id}" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05); flex-direction:column; gap:0.75rem;">
+                <!-- Review List Section -->
+                <div>
+                    <h5 style="margin:0 0 0.5rem 0; font-size:0.8rem; font-weight:700; color:white;">Customer Feedback</h5>
+                    <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                        ${reviewsListHtml}
+                    </div>
+                </div>
+
+                <!-- Post Review Mini Form -->
+                <div style="background:rgba(255,255,255,0.01); border:1px solid var(--border-color); border-radius:4px; padding:0.75rem; margin-top:0.5rem;">
+                    <h5 style="margin:0 0 0.5rem 0; font-size:0.75rem; font-weight:700; color:white; display:flex; align-items:center; gap:0.25rem;"><i data-lucide="edit-3" style="width:12px;height:12px;"></i> Post Customer Review</h5>
+                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+                        <input type="text" id="review-author-${biz.id}" placeholder="Your Name" style="padding:0.35rem; font-size:0.7rem; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                        <select id="review-stars-${biz.id}" style="padding:0.35rem; font-size:0.7rem; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                            <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                            <option value="3">⭐⭐⭐ (3 Stars)</option>
+                            <option value="2">⭐⭐ (2 Stars)</option>
+                            <option value="1">⭐ (1 Star)</option>
+                        </select>
+                    </div>
+                    <textarea id="review-text-${biz.id}" rows="2" placeholder="Write feedback comment..." style="padding:0.35rem; font-size:0.7rem; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--border-color); border-radius:4px; width:100%; box-sizing:border-box; resize:vertical; margin-bottom:0.5rem; font-family:inherit;"></textarea>
+                    <button class="btn-primary" onclick="submitBusinessReview('${biz.id}')" style="font-size:0.7rem; padding:0.3rem 0.6rem; width:100%;"><i data-lucide="check"></i> Submit Review</button>
+                </div>
+
+                <!-- Add Project Photo Mini Form -->
+                <div style="background:rgba(255,255,255,0.01); border:1px solid var(--border-color); border-radius:4px; padding:0.75rem;">
+                    <h5 style="margin:0 0 0.5rem 0; font-size:0.75rem; font-weight:700; color:white; display:flex; align-items:center; gap:0.25rem;"><i data-lucide="image" style="width:12px;height:12px;"></i> Add Project/Work Photo</h5>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="url" id="photo-url-${biz.id}" placeholder="Paste Project Image URL (e.g. from Unsplash)" style="padding:0.35rem; font-size:0.7rem; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--border-color); border-radius:4px; flex-grow:1;">
+                        <button class="btn-secondary" onclick="submitBusinessPhoto('${biz.id}')" style="font-size:0.7rem; padding:0.35rem 0.8rem; color:white;"><i data-lucide="upload"></i> Upload</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        list.appendChild(item);
+    });
+
+    lucide.createIcons();
+}
+
+function toggleBizDetailsDrawer(bizId) {
+    const drawer = document.getElementById(`biz-details-${bizId}`);
+    if (!drawer) return;
+    if (drawer.style.display === 'none') {
+        drawer.style.display = 'flex';
+    } else {
+        drawer.style.display = 'none';
+    }
+}
+
+function openImageWindow(url) {
+    window.open(url, '_blank');
+}
+
+function submitBusinessReview(bizId) {
+    const authorVal = document.getElementById(`review-author-${bizId}`).value.trim() || 'Anonymous';
+    const starVal = parseInt(document.getElementById(`review-stars-${bizId}`).value) || 5;
+    const textVal = document.getElementById(`review-text-${bizId}`).value.trim();
+
+    if (!textVal) {
+        showToast("Please enter a review description!");
+        return;
+    }
+
+    const biz = laborBusinesses.find(b => b.id === bizId);
+    if (!biz) return;
+
+    if (!biz.reviews) biz.reviews = [];
+    biz.reviews.push({
+        author: authorVal,
+        rating: starVal,
+        text: textVal
+    });
+
+    // Recalculate average rating
+    const total = biz.reviews.reduce((sum, r) => sum + r.rating, 0);
+    biz.rating = parseFloat((total / biz.reviews.length).toFixed(1));
+
+    localStorage.setItem('revitalize_labor_businesses', JSON.stringify(laborBusinesses));
+    showToast("Review submitted successfully!");
+    renderLaborDirectory();
+}
+
+function submitBusinessPhoto(bizId) {
+    const urlVal = document.getElementById(`photo-url-${bizId}`).value.trim();
+    if (!urlVal) {
+        showToast("Please paste a valid photo URL!");
+        return;
+    }
+
+    const biz = laborBusinesses.find(b => b.id === bizId);
+    if (!biz) return;
+
+    if (!biz.photos) biz.photos = [];
+    biz.photos.push(urlVal);
+
+    localStorage.setItem('revitalize_labor_businesses', JSON.stringify(laborBusinesses));
+    showToast("Project photo posted successfully!");
+    renderLaborDirectory();
+}
+
+function handleContractorRegister(event) {
+    event.preventDefault();
+    const name = document.getElementById('reg-biz-name').value.trim();
+    const trade = document.getElementById('reg-biz-trade').value;
+    const rate = parseInt(document.getElementById('reg-biz-rate').value) || 75;
+    const email = document.getElementById('reg-biz-email').value.trim();
+    const webhook = document.getElementById('reg-biz-webhook').value.trim();
+    const tier = document.getElementById('reg-biz-tier').value;
+
+    const newBiz = {
+        id: `biz-${Date.now()}`,
+        name: name,
+        trade: trade,
+        rate: rate,
+        email: email,
+        webhook: webhook || 'https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped',
+        sponsored: (tier === 'sponsored'),
+        tier: tier,
+        rating: 5.0,
+        distance: parseFloat((1 + Math.random() * 4).toFixed(1)),
+        reviews: [],
+        photos: ['https://images.unsplash.com/photo-1581094288338-2314dddb7eed?auto=format&fit=crop&w=400&q=80']
+    };
+
+    laborBusinesses.push(newBiz);
+    localStorage.setItem('revitalize_labor_businesses', JSON.stringify(laborBusinesses));
+
+    // Clear form
+    document.getElementById('contractor-register-form').reset();
+    showToast("Contractor business profile registered successfully!");
+    renderLaborDirectory();
+}
+
+function handleHomeownerJobSubmit(event) {
+    event.preventDefault();
+    const addr = document.getElementById('job-address').value.trim();
+    const trade = document.getElementById('job-trade').value;
+    const budget = parseInt(document.getElementById('job-budget').value) || 1000;
+    const desc = document.getElementById('job-desc').value.trim();
+    const owner = document.getElementById('job-owner').value.trim();
+    const email = document.getElementById('job-email').value.trim();
+
+    const newRequest = {
+        id: `req-${Date.now()}`,
+        address: addr,
+        trade: trade,
+        budget: budget,
+        desc: desc,
+        owner: owner,
+        email: email,
+        timestamp: new Date().toLocaleString()
+    };
+
+    workRequests.unshift(newRequest);
+    localStorage.setItem('revitalize_work_requests', JSON.stringify(workRequests));
+
+    // Clear form
+    document.getElementById('homeowner-job-form').reset();
+    showToast("Job request published to Available Work Feed!");
+    renderJobRequestsFeed();
+}
+
+function renderJobRequestsFeed() {
+    const feed = document.getElementById('job-requests-feed');
+    if (!feed) return;
+    feed.innerHTML = '';
+
+    if (workRequests.length === 0) {
+        feed.innerHTML = '<div style="text-align:center; font-size:0.75rem; color:var(--text-muted); padding:1rem;">No current homeowner work requests.</div>';
+        return;
+    }
+
+    workRequests.forEach(req => {
+        const div = document.createElement('div');
+        div.style.background = 'rgba(255,255,255,0.01)';
+        div.style.border = '1px solid var(--border-color)';
+        div.style.borderRadius = '4px';
+        div.style.padding = '0.75rem';
+        div.style.fontSize = '0.75rem';
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-weight:700; color:white; margin-bottom:0.25rem;">
+                <span style="font-size:0.8rem;">${req.address}</span>
+                <span class="text-success">$${req.budget} Budget</span>
+            </div>
+            <div style="font-weight:600; color:var(--warning); text-transform:capitalize; margin-bottom:0.4rem;">Required: ${req.trade}</div>
+            <p style="color:var(--text-muted); margin:0 0 0.5rem 0; line-height:1.2;">"${req.desc}"</p>
+            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.7rem; border-top:1px solid rgba(255,255,255,0.03); padding-top:0.4rem;">
+                <span>Posted: ${req.timestamp}</span>
+                <span>By: ${req.owner}</span>
+            </div>
+        `;
+        feed.appendChild(div);
+    });
+}
+
+// ================= UTOOL CONTRACTOR SUITE LOGIC =================
+function populateUtoolLeadSelect() {
+    const select = document.getElementById('utool-lead-select');
+    if (!select) return;
+    select.innerHTML = '';
+
+    if (leads.length === 0) {
+        select.innerHTML = '<option value="">No active listings found</option>';
+        return;
+    }
+
+    leads.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.innerText = `${l.address} (Listing File - ${l.name})`;
+        select.appendChild(opt);
+    });
+}
+
+function onUtoolLeadSelectChange() {
+    renderUtoolDashboard();
+}
+
+function onUtoolWebhookChange() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    const webhookUrl = document.getElementById('utool-contractor-webhook').value.trim();
+    
+    // Save to custom apiSettings for this lead/listing
+    const lead = leads.find(l => l.id === leadId);
+    if (lead) {
+        lead.customWebhook = webhookUrl;
+        saveLeadsToStorage();
+        showToast("Contractor custom Make.com webhook saved!");
+    }
+}
+
+function renderUtoolDashboard() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    const crewTable = document.getElementById('utool-crew-table-body');
+    const materialsTable = document.getElementById('utool-materials-table-body');
+    const chatBox = document.getElementById('utool-chat-box');
+    
+    if (!leadId) {
+        if (crewTable) crewTable.innerHTML = '<tr><td colspan="4" style="padding:1rem; text-align:center;" class="text-muted">Please create and select a property listing first.</td></tr>';
+        if (materialsTable) materialsTable.innerHTML = '<tr><td colspan="5" style="padding:1rem; text-align:center;" class="text-muted">Please select a property listing.</td></tr>';
+        if (chatBox) chatBox.innerHTML = '<div style="text-align:center; padding:2rem; font-size:0.75rem; color:var(--text-muted);">No listing selected.</div>';
+        return;
+    }
+
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+
+    // Load custom webhook if configured
+    document.getElementById('utool-contractor-webhook').value = lead.customWebhook || 'https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped';
+
+    // 1. Calculate and Render Crew Assignments
+    if (!crewAllocations[leadId]) {
+        // Pre-seed some mock workers
+        crewAllocations[leadId] = [
+            { name: 'John Doe', trade: 'plumbing', rate: 75 },
+            { name: 'Bruce Wayne', trade: 'electrician', rate: 120 }
+        ];
+        localStorage.setItem('revitalize_crew_allocations', JSON.stringify(crewAllocations));
+    }
+
+    const crew = crewAllocations[leadId];
+    document.getElementById('utool-crew-count').innerText = `${crew.length} Crew Allocated`;
+    crewTable.innerHTML = '';
+    
+    let totalLaborCost = 0;
+    crew.forEach((worker, idx) => {
+        totalLaborCost += worker.rate;
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        tr.innerHTML = `
+            <td style="padding:0.5rem; color:white; font-weight:600;">${worker.name}</td>
+            <td style="padding:0.5rem; text-transform:capitalize; color:var(--text-muted);">${worker.trade}</td>
+            <td style="padding:0.5rem; color:white;">$${worker.rate}</td>
+            <td style="padding:0.5rem; text-align:right;">
+                <button class="btn-secondary btn-sm" onclick="handleDeleteCrewMember(${idx})" style="padding:0.2rem 0.4rem; color:var(--danger); border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.02);"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>
+            </td>
+        `;
+        crewTable.appendChild(tr);
+    });
+
+    // 2. Calculate and Render Materials Checklist
+    if (!materialsLists[leadId]) {
+        materialsLists[leadId] = [
+            { item: 'Copper Pipe fittings', qty: 10, price: 15, status: 'delivered' },
+            { item: 'Romex electrical wire 100ft', qty: 2, price: 85, status: 'ordered' },
+            { item: 'Drywall Sheets', qty: 15, price: 20, status: 'needed' }
+        ];
+        localStorage.setItem('revitalize_materials_lists', JSON.stringify(materialsLists));
+    }
+
+    const mats = materialsLists[leadId];
+    materialsTable.innerHTML = '';
+    
+    let totalMaterialCost = 0;
+    mats.forEach((mat, idx) => {
+        const itemCost = mat.qty * mat.price;
+        totalMaterialCost += itemCost;
+
+        let statusColor = 'var(--text-muted)';
+        if (mat.status === 'ordered') statusColor = 'var(--warning)';
+        if (mat.status === 'delivered') statusColor = 'var(--success)';
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        tr.innerHTML = `
+            <td style="padding:0.5rem; color:white; font-weight:600;">${mat.item}</td>
+            <td style="padding:0.5rem; color:var(--text-muted);">${mat.qty}</td>
+            <td style="padding:0.5rem; color:white;">$${itemCost}</td>
+            <td style="padding:0.5rem; text-transform:capitalize; font-weight:700; color:${statusColor}; cursor:pointer;" onclick="toggleMaterialStatus(${idx})">${mat.status}</td>
+            <td style="padding:0.5rem; text-align:right;">
+                <button class="btn-secondary btn-sm" onclick="handleDeleteMaterialItem(${idx})" style="padding:0.2rem 0.4rem; color:var(--danger); border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.02);"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>
+            </td>
+        `;
+        materialsTable.appendChild(tr);
+    });
+
+    // 3. Render Budgets Display
+    const totalSpent = totalLaborCost + totalMaterialCost;
+    const allocatedBudget = lead.scope.reduce((sum, itemKey) => {
+        const item = REHAB_ITEMS.find(i => i.id === itemKey);
+        return sum + (item ? item.discounted : 0);
+    }, 0);
+
+    document.getElementById('utool-material-cost-display').innerText = `$${totalMaterialCost.toLocaleString()}`;
+    document.getElementById('utool-labor-cost-display').innerText = `$${totalLaborCost.toLocaleString()}`;
+    document.getElementById('utool-total-spent-display').innerText = `$${totalSpent.toLocaleString()}`;
+    document.getElementById('utool-allocated-budget-display').innerText = `$${allocatedBudget.toLocaleString()}`;
+
+    const burnRate = allocatedBudget > 0 ? Math.min(100, Math.round((totalSpent / allocatedBudget) * 100)) : 0;
+    document.getElementById('utool-burn-pct').innerText = `${burnRate}%`;
+    
+    const progressFill = document.getElementById('utool-budget-progress-fill');
+    progressFill.style.width = `${burnRate}%`;
+    if (burnRate > 95) {
+        progressFill.style.background = 'var(--danger)';
+    } else if (burnRate > 75) {
+        progressFill.style.background = 'var(--warning)';
+    } else {
+        progressFill.style.background = 'var(--primary)';
+    }
+
+    // 4. Render Conversation Timeline messages
+    if (!chatMessages[leadId]) {
+        chatMessages[leadId] = [
+            { sender: 'Contractor', body: 'Outbound: Contract Signature verification requested.', time: new Date(Date.now() - 60000 * 5).toLocaleString() },
+            { sender: 'Client (Homeowner)', body: 'Inbound: Looking over the wholesale assignment documents now. Looks solid.', time: new Date(Date.now() - 60000 * 3).toLocaleString() }
+        ];
+        localStorage.setItem('revitalize_chat_messages', JSON.stringify(chatMessages));
+    }
+
+    const chats = chatMessages[leadId];
+    chatBox.innerHTML = '';
+    chats.forEach(msg => {
+        const block = document.createElement('div');
+        block.style.padding = '0.4rem 0.6rem';
+        block.style.borderRadius = '4px';
+        block.style.fontSize = '0.75rem';
+        block.style.lineHeight = '1.25';
+        
+        if (msg.sender === 'Contractor') {
+            block.style.background = 'rgba(236,72,153,0.08)';
+            block.style.alignSelf = 'flex-end';
+            block.style.border = '1px solid rgba(236,72,153,0.2)';
+            block.style.maxWidth = '85%';
+        } else {
+            block.style.background = 'rgba(255,255,255,0.02)';
+            block.style.alignSelf = 'flex-start';
+            block.style.border = '1px solid var(--border-color)';
+            block.style.maxWidth = '85%';
+        }
+
+        block.innerHTML = `
+            <div style="font-weight:700; color:white; display:flex; justify-content:space-between; gap:1rem; margin-bottom:0.15rem;">
+                <span>${msg.sender}</span>
+                <span style="font-size:0.6rem; color:var(--text-muted); font-weight:normal;">${msg.time}</span>
+            </div>
+            <div style="color:var(--text-muted);">${msg.body}</div>
+        `;
+        chatBox.appendChild(block);
+    });
+
+    // Auto scroll chat to bottom
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    lucide.createIcons();
+}
+
+function handleAddCrewMember() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    const name = document.getElementById('utool-new-crew-name').value.trim();
+    const trade = document.getElementById('utool-new-crew-trade').value;
+    const rate = parseInt(document.getElementById('utool-new-crew-rate').value) || 50;
+
+    if (!name) {
+        showToast("Please enter crew member name!");
+        return;
+    }
+
+    crewAllocations[leadId].push({ name, trade, rate });
+    localStorage.setItem('revitalize_crew_allocations', JSON.stringify(crewAllocations));
+
+    document.getElementById('utool-new-crew-name').value = '';
+    document.getElementById('utool-new-crew-rate').value = '';
+
+    showToast("Crew member allocated successfully!");
+    renderUtoolDashboard();
+}
+
+function handleDeleteCrewMember(idx) {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    crewAllocations[leadId].splice(idx, 1);
+    localStorage.setItem('revitalize_crew_allocations', JSON.stringify(crewAllocations));
+    
+    showToast("Crew member de-allocated.");
+    renderUtoolDashboard();
+}
+
+function handleAddMaterialItem() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    const name = document.getElementById('utool-new-mat-name').value.trim();
+    const qty = parseInt(document.getElementById('utool-new-mat-qty').value) || 1;
+    const price = parseInt(document.getElementById('utool-new-mat-price').value) || 10;
+
+    if (!name) {
+        showToast("Please enter material item name!");
+        return;
+    }
+
+    materialsLists[leadId].push({ item: name, qty, price, status: 'needed' });
+    localStorage.setItem('revitalize_materials_lists', JSON.stringify(materialsLists));
+
+    document.getElementById('utool-new-mat-name').value = '';
+    document.getElementById('utool-new-mat-qty').value = '';
+    document.getElementById('utool-new-mat-price').value = '';
+
+    showToast("Material item added to checklist!");
+    renderUtoolDashboard();
+}
+
+function handleDeleteMaterialItem(idx) {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    materialsLists[leadId].splice(idx, 1);
+    localStorage.setItem('revitalize_materials_lists', JSON.stringify(materialsLists));
+
+    showToast("Material item removed.");
+    renderUtoolDashboard();
+}
+
+function toggleMaterialStatus(idx) {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    const mat = materialsLists[leadId][idx];
+    if (mat.status === 'needed') {
+        mat.status = 'ordered';
+    } else if (mat.status === 'ordered') {
+        mat.status = 'delivered';
+    } else {
+        mat.status = 'needed';
+    }
+
+    localStorage.setItem('revitalize_materials_lists', JSON.stringify(materialsLists));
+    renderUtoolDashboard();
+}
+
+function sendUtoolOutboundMessage() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    const bodyText = document.getElementById('utool-message-input').value.trim();
+    if (!bodyText) {
+        showToast("Please enter message copy!");
+        return;
+    }
+
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+
+    const webhookUrl = document.getElementById('utool-contractor-webhook').value.trim();
+
+    // 1. Dispatch POST request directly to contractor custom webhook
+    fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            event: 'contractor_message_sent',
+            property: lead.address,
+            recipient: lead.email,
+            body: bodyText,
+            timestamp: new Date().toISOString()
+        })
+    }).then(res => {
+        if (res.ok) showToast("Webhook payload dispatched successfully!");
+    }).catch(err => console.error("Webhook dispatch failed:", err));
+
+    // 2. Add message to local conversation history
+    chatMessages[leadId].push({
+        sender: 'Contractor',
+        body: bodyText,
+        time: new Date().toLocaleString()
+    });
+    localStorage.setItem('revitalize_chat_messages', JSON.stringify(chatMessages));
+
+    document.getElementById('utool-message-input').value = '';
+    renderUtoolDashboard();
+}
+
+function simulateInboundEmailResponse() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) return;
+
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+
+    const reply = prompt("Simulate incoming email reply from Client / Homeowner:", "Yes, I approve the budget additions. Proceed with romex ordering.");
+    if (!reply) return;
+
+    // Add client reply message to conversation history
+    chatMessages[leadId].push({
+        sender: `Client (${lead.name})`,
+        body: reply,
+        time: new Date().toLocaleString()
+    });
+    localStorage.setItem('revitalize_chat_messages', JSON.stringify(chatMessages));
+
+    renderUtoolDashboard();
+    showToast("Incoming email reply parsed & read successfully!");
+}
+
+function downloadOfflineAgreementText() {
+    const leadId = document.getElementById('utool-lead-select').value;
+    if (!leadId) {
+        showToast("No active job selected!");
+        return;
+    }
+
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+
+    // Calculate budget details
+    const crew = crewAllocations[leadId] || [];
+    const mats = materialsLists[leadId] || [];
+    const totalLabor = crew.reduce((sum, w) => sum + w.rate, 0);
+    const totalMats = mats.reduce((sum, m) => sum + m.qty * m.price, 0);
+
+    const contractBody = `
+======================================================================
+           OFFLINE REAL ESTATE WHOLESALE ASSIGNMENT AGREEMENT
+======================================================================
+DATE: ${new Date().toLocaleDateString()}
+PROPERTY FILE ADDRESS: ${lead.address}
+CLIENT / OWNER: ${lead.name}
+CONTRACTOR / ASSIGNEE: Revitalize Contracting Network
+ASSIGNMENT TIER: Wholesale Custom Pre-Build (Double-Contract)
+
+----------------------------------------------------------------------
+1. TRANSACTION SUMMARY
+----------------------------------------------------------------------
+As-Is Valuation: $${(lead.asIsValue || 250000).toLocaleString()} USD
+Est. After Rehab Value (ARV): $${(lead.targetARV || 380000).toLocaleString()} USD
+Contract Type: 50% Deferred Construction Funding Model
+Offline Signing Mode: Authorized Outside Digital System
+
+----------------------------------------------------------------------
+2. SOW BUDGET DETAILS (UTOOL AUDIT)
+----------------------------------------------------------------------
+Total Material Procurement Cost: $${totalMats.toLocaleString()} USD
+Total Allocated Labor Rate: $${totalLabor.toLocaleString()} USD
+Pre-approved Rehab Budget Cap: $${(totalLabor + totalMats).toLocaleString()} USD
+
+----------------------------------------------------------------------
+3. OFF-SITE AUTHORIZATION RULES
+----------------------------------------------------------------------
+The parties agree to authorize this double-contract agreement off-site.
+All payments split calculations are subject to escrow HUD-1 ledger.
+By signing below, the contractor agrees to assign labor crew to milestones 
+and the homeowner authorizes physical construction access while in occupancy.
+
+X_____________________________________________  Date: ______________
+Homeowner Signature (Client)
+
+X_____________________________________________  Date: ______________
+Contractor Signature (UTool Member)
+
+X_____________________________________________  Date: ______________
+Wholesaler / Escrow Coordinator
+======================================================================
+`;
+
+    // Download text file
+    const element = document.createElement('a');
+    const file = new Blob([contractBody], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `offline_contract_${lead.address.replace(/ /g, '_')}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+
+    showToast("Offline agreement file generated & downloaded!");
 }

@@ -27,6 +27,12 @@
             <button id="btn-market" class="nav-tab" onclick="switchView('market')">
                 <i data-lucide="shopping-bag"></i> Browse Listings
             </button>
+            <button id="btn-labor" class="nav-tab" onclick="switchView('labor')">
+                <i data-lucide="users"></i> Browse Labor
+            </button>
+            <button id="btn-utool" class="nav-tab" onclick="switchView('utool')">
+                <i data-lucide="wrench"></i> UTool Workforce
+            </button>
             <button id="btn-dashboard" class="nav-tab" onclick="switchView('dashboard')">
                 <i data-lucide="layout-dashboard"></i> Agent Dashboard
             </button>
@@ -370,6 +376,334 @@
                 </div>
                 <div class="catalog-grid" id="public-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:2rem;">
                     <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LABOR MARKETPLACE VIEW ================= -->
+        <section id="view-labor" class="view-section">
+            <div class="hero-section">
+                <div class="hero-badge">Social Media for Labor • Local Trades & Directory</div>
+                <h1 class="hero-title">Local <span class="text-gradient">Labor & Trades Directory</span></h1>
+                <p class="hero-subtitle">Find verified Plumbers, Electricians, HVAC techs, and Carpenters or promote your local contracting business with Premium Sponsorships.</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:2rem; margin-top:2rem;">
+                <!-- Left: Directory -->
+                <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <i data-lucide="search" class="accent-text"></i>
+                                <h3 style="margin:0;">Search Local Businesses</h3>
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <select id="directory-filter-trade" onchange="renderLaborDirectory()" style="background:rgba(0,0,0,0.3); color:white; border:1px solid var(--border-color); padding:0.4rem; border-radius:4px; font-size:0.8rem;">
+                                    <option value="all">All Trades</option>
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="electrician">Electricians</option>
+                                    <option value="construction">Construction</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="hvac">HVAC Techs</option>
+                                    <option value="others">Others</option>
+                                </select>
+                                <select id="directory-sort-by" onchange="renderLaborDirectory()" style="background:rgba(0,0,0,0.3); color:white; border:1px solid var(--border-color); padding:0.4rem; border-radius:4px; font-size:0.8rem;">
+                                    <option value="sponsored">Sort: Sponsor Boost Spots</option>
+                                    <option value="distance">Sort: Nearest Distance</option>
+                                    <option value="rating">Sort: Highest Rating</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="labor-directory-list" style="display:flex; flex-direction:column; gap:1rem;">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Directory Forms & Job Board -->
+                <div style="display:flex; flex-direction:column; gap:2rem;">
+                    <!-- Register Business Card -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1rem;">
+                            <i data-lucide="user-plus" class="accent-text"></i>
+                            <h3>Contractor Registration</h3>
+                        </div>
+                        <form id="contractor-register-form" onsubmit="handleContractorRegister(event)" style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <div class="form-group">
+                                <label for="reg-biz-name">Business / Contractor Name</label>
+                                <input type="text" id="reg-biz-name" required placeholder="e.g. Wright Electric LLC">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-biz-trade">Trade Specialization</label>
+                                <select id="reg-biz-trade">
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="electrician">Electricians</option>
+                                    <option value="construction">Construction</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="hvac">HVAC</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-biz-rate">Hourly Rate ($ USD)</label>
+                                <input type="number" id="reg-biz-rate" required placeholder="e.g. 85">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-biz-email">Email Address</label>
+                                <input type="email" id="reg-biz-email" required placeholder="e.g. wright@electric.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-biz-webhook">Make.com Email Webhook URL</label>
+                                <input type="url" id="reg-biz-webhook" placeholder="https://hook.us2.make.com/..." value="https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-biz-tier">Sponsorship & Listing Tier</label>
+                                <select id="reg-biz-tier">
+                                    <option value="free">Standard Spot (Free directory rank)</option>
+                                    <option value="sponsored">Sponsor Boost Spot ($29/mo - Rank Higher! ⭐)</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" type="submit" style="width:100%; margin-top:0.5rem;">
+                                <i data-lucide="plus"></i> Register & Active Profile
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Homeowner Submit Job -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1rem;">
+                            <i data-lucide="clipboard-list" class="accent-text"></i>
+                            <h3>Homeowner Ask For Work</h3>
+                        </div>
+                        <form id="homeowner-job-form" onsubmit="handleHomeownerJobSubmit(event)" style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <div class="form-group">
+                                <label for="job-address">Property Address</label>
+                                <input type="text" id="job-address" required placeholder="e.g. 504 Cedar Rd">
+                            </div>
+                            <div class="form-group">
+                                <label for="job-trade">Required Trade</label>
+                                <select id="job-trade">
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="electrician">Electricians</option>
+                                    <option value="construction">Construction</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="hvac">HVAC</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="job-budget">Target Budget ($ USD)</label>
+                                <input type="number" id="job-budget" required placeholder="e.g. 1500">
+                            </div>
+                            <div class="form-group">
+                                <label for="job-desc">Work Description / Details</label>
+                                <textarea id="job-desc" rows="3" required placeholder="e.g. Need to rewire kitchen outlets and add dedicated microwave circuit..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="job-owner">Your Name</label>
+                                <input type="text" id="job-owner" required placeholder="e.g. Alice Smith">
+                            </div>
+                            <div class="form-group">
+                                <label for="job-email">Your Email Address</label>
+                                <input type="email" id="job-email" required placeholder="e.g. alice@smithmail.com">
+                            </div>
+                            <button class="btn-secondary" type="submit" style="width:100%; color:white; background:var(--primary); border-color:var(--primary);">
+                                <i data-lucide="send"></i> Post Job Request (Free)
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Available Job Feed -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1rem;">
+                            <i data-lucide="rss" class="accent-text"></i>
+                            <h3>Available Work Feed</h3>
+                        </div>
+                        <div id="job-requests-feed" style="display:flex; flex-direction:column; gap:1rem; max-height:350px; overflow-y:auto; padding-right:0.25rem;">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= UTOOL WORKFORCE HUB VIEW ================= -->
+        <section id="view-utool" class="view-section">
+            <div class="hero-section">
+                <div class="hero-badge">UTool Contractor Suite • Crew Assignments & Budget Tracking</div>
+                <h1 class="hero-title">UTool <span class="text-gradient">Workforce & Resource Board</span></h1>
+                <p class="hero-subtitle">Assign skilled labor to jobs, organize materials lists, check budget balances, and run Make.com drip campaigns.</p>
+            </div>
+
+            <!-- Lead Select Filter -->
+            <div class="glass-card" style="padding:1.25rem; margin-top:2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <i data-lucide="folder-open" class="accent-text"></i>
+                    <h3 style="margin:0;">Select Active Job / Property File</h3>
+                </div>
+                <select id="utool-lead-select" onchange="onUtoolLeadSelectChange()" style="background:rgba(0,0,0,0.3); color:white; border:1px solid var(--border-color); padding:0.5rem; border-radius:4px; font-size:0.85rem; width:300px;">
+                    <!-- Populated dynamically with leads -->
+                </select>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:2rem; margin-top:2rem;">
+                <!-- Left: Crew and Materials -->
+                <div style="display:flex; flex-direction:column; gap:2rem;">
+                    <!-- Crew Assign Card -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <i data-lucide="hard-hat" class="accent-text"></i>
+                                <h3 style="margin:0;">Crew & Workforce Allocator</h3>
+                            </div>
+                            <span class="badge" style="background:var(--primary); color:white;" id="utool-crew-count">0 Crew Assigned</span>
+                        </div>
+                        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.8rem;">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted);">
+                                    <th style="padding:0.5rem;">Crew Member</th>
+                                    <th style="padding:0.5rem;">Trade Role</th>
+                                    <th style="padding:0.5rem;">Allocated Rate</th>
+                                    <th style="padding:0.5rem; text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="utool-crew-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Add Crew Mini Form -->
+                        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+                            <h4 style="font-size:0.8rem; font-weight:700; color:white; margin-bottom:0.75rem;">Assign New Crew Person</h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:0.5rem;">
+                                <input type="text" id="utool-new-crew-name" placeholder="Name (e.g. John Doe)" style="padding:0.4rem; font-size:0.75rem; background:rgba(255,255,255,0.01); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                                <select id="utool-new-crew-trade" style="padding:0.4rem; font-size:0.75rem; background:rgba(0,0,0,0.3); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="electrician">Electrician</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="hvac">HVAC</option>
+                                    <option value="construction">General Labor</option>
+                                </select>
+                                <input type="number" id="utool-new-crew-rate" placeholder="Cost ($ USD)" style="padding:0.4rem; font-size:0.75rem; background:rgba(255,255,255,0.01); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                                <button class="btn-primary" onclick="handleAddCrewMember()" style="padding:0.4rem 1rem; font-size:0.75rem;"><i data-lucide="plus"></i> Assign</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Materials Card -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1.25rem;">
+                            <i data-lucide="package" class="accent-text"></i>
+                            <h3 style="margin:0;">Materials Procurement Planner</h3>
+                        </div>
+                        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.8rem;">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted);">
+                                    <th style="padding:0.5rem;">Material Item</th>
+                                    <th style="padding:0.5rem;">Qty</th>
+                                    <th style="padding:0.5rem;">Est. Cost</th>
+                                    <th style="padding:0.5rem;">Status</th>
+                                    <th style="padding:0.5rem; text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="utool-materials-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Add Material Mini Form -->
+                        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+                            <h4 style="font-size:0.8rem; font-weight:700; color:white; margin-bottom:0.75rem;">Request Material Procurement</h4>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:0.5rem;">
+                                <input type="text" id="utool-new-mat-name" placeholder="Item (e.g. Copper pipes)" style="padding:0.4rem; font-size:0.75rem; background:rgba(255,255,255,0.01); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                                <input type="number" id="utool-new-mat-qty" placeholder="Qty" style="padding:0.4rem; font-size:0.75rem; background:rgba(255,255,255,0.01); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                                <input type="number" id="utool-new-mat-price" placeholder="Cost per" style="padding:0.4rem; font-size:0.75rem; background:rgba(255,255,255,0.01); color:white; border:1px solid var(--border-color); border-radius:4px;">
+                                <button class="btn-primary" onclick="handleAddMaterialItem()" style="padding:0.4rem 1rem; font-size:0.75rem;"><i data-lucide="plus"></i> Add Item</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Budgets and Messages -->
+                <div style="display:flex; flex-direction:column; gap:2rem;">
+                    <!-- Budget Monitor Card -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1rem;">
+                            <i data-lucide="pie-chart" class="accent-text"></i>
+                            <h3>Project Budget Monitor</h3>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:1rem;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.25rem;">
+                                    <span>Material Cost:</span>
+                                    <span id="utool-material-cost-display" style="color:white; font-weight:600;">$0</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.25rem;">
+                                    <span>Labor / Crew Cost:</span>
+                                    <span id="utool-labor-cost-display" style="color:white; font-weight:600;">$0</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:700; color:white; margin-top:0.5rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:0.5rem;">
+                                    <span>Total Spent:</span>
+                                    <span id="utool-total-spent-display">$0</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-bottom:0.25rem;">
+                                    <span>Allocated Budget:</span>
+                                    <span id="utool-allocated-budget-display">$0</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Budget Progress Bar -->
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2; display:flex;">
+                                    <span>Budget Burn Rate</span>
+                                    <span id="utool-burn-pct">0%</span>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.05); height:8px; border-radius:4px; overflow:hidden;">
+                                    <div id="utool-budget-progress-fill" style="background:var(--primary); height:100%; width:0%; transition:width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- messaging and offline contract downloads -->
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div class="card-header" style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <i data-lucide="message-square" class="accent-text"></i>
+                                <h3 style="margin:0;">Project Inbox</h3>
+                            </div>
+                            <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3);">Connected</span>
+                        </div>
+                        
+                        <!-- Contractor Webhook configuration -->
+                        <div style="margin-bottom:1rem;">
+                            <label style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.25rem; display:block;">Active Contractor Make Webhook</label>
+                            <input type="url" id="utool-contractor-webhook" onchange="onUtoolWebhookChange()" style="padding:0.35rem; font-size:0.75rem; background:rgba(0,0,0,0.3); color:white; border:1px solid var(--border-color); border-radius:4px; width:100%; box-sizing:border-box;" value="https://hook.us2.make.com/1ugb4pws46g5xpl97qeicogdpv1zgped">
+                        </div>
+
+                        <!-- Chat timeline container -->
+                        <div id="utool-chat-box" style="height:250px; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:4px; padding:0.5rem; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+                            <!-- Dynamic messages -->
+                        </div>
+
+                        <!-- message controls -->
+                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <textarea id="utool-message-input" rows="2" placeholder="Type message to client / broadcast webhook..." style="padding:0.4rem; font-size:0.75rem; background:rgba(255,255,255,0.01); color:white; border:1px solid var(--border-color); border-radius:4px; box-sizing:border-box; width:100%; resize:vertical;"></textarea>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                                <button class="btn-primary" onclick="sendUtoolOutboundMessage()" style="padding:0.4rem; font-size:0.75rem; width:100%;"><i data-lucide="send"></i> Send Outbound</button>
+                                <button class="btn-secondary" onclick="simulateInboundEmailResponse()" style="padding:0.4rem; font-size:0.75rem; width:100%; color:white;"><i data-lucide="mail-warning"></i> Sim Inbound</button>
+                            </div>
+                        </div>
+
+                        <!-- Offline contract generation -->
+                        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:0.5rem;">
+                            <h4 style="font-size:0.8rem; font-weight:700; color:white; margin:0;">Offline Contracting</h4>
+                            <p style="font-size:0.7rem; color:var(--text-muted); margin:0;">Download formatted contract agreement files to print, sign, and authorize offline.</p>
+                            <button class="btn-secondary btn-sm" onclick="downloadOfflineAgreementText()" style="width:100%; font-size:0.75rem; padding:0.4rem; display:flex; align-items:center; justify-content:center; gap:0.25rem; color:white; border-color:var(--warning); background:rgba(245,158,11,0.05);">
+                                <i data-lucide="download"></i> Download Offline Agreement (.txt)
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1582,6 +1916,6 @@
     <!-- Notification Toast -->
     <div id="toast" class="toast">Lead successfully created!</div>
 
-    <script src="app.js?v=22"></script>
+    <script src="app.js?v=23"></script>
 </body>
 </html>
