@@ -488,6 +488,26 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error("Auth user parse error:", e);
     }
+
+    // Seed agent account in local fallback accounts
+    try {
+        let accounts = [];
+        const savedAccs = localStorage.getItem('revitalize_accounts');
+        if (savedAccs) accounts = JSON.parse(savedAccs);
+        if (!accounts.some(a => a.email.toLowerCase() === 'seanhse97@gmail.com')) {
+            accounts.push({
+                email: "seanhse97@gmail.com",
+                password: "SlimpKing555",
+                name: "Sean (Agent)",
+                role: "agent",
+                bizId: ""
+            });
+            localStorage.setItem('revitalize_accounts', JSON.stringify(accounts));
+        }
+    } catch (e) {
+        console.error("Agent seeding error:", e);
+    }
+
     renderAuthHeaderStatus();
 
     // Initialize UI features
@@ -575,6 +595,18 @@ function switchView(viewName) {
         populateUtoolLeadSelect();
         renderUtoolDashboard();
     } else {
+        // Restrict access to Agent Dashboard
+        const isAuthorizedAgent = currentUser && currentUser.email && currentUser.email.toLowerCase() === 'seanhse97@gmail.com';
+        if (!isAuthorizedAgent) {
+            showToast("Access Denied: The Agent Dashboard is restricted to authorized agent accounts.");
+            // Open auth modal so they can sign in as agent
+            openAuthModal();
+            // Redirect back to homeowner portal
+            document.getElementById('view-portal').classList.add('active');
+            document.getElementById('btn-portal').classList.add('active');
+            return;
+        }
+
         document.getElementById('view-dashboard').classList.add('active');
         document.getElementById('btn-dashboard').classList.add('active');
         renderPipelineBoard();
