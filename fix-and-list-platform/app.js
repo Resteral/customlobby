@@ -651,6 +651,7 @@ function initApp() {
     renderEmailLogs();
     updateDashboardStats();
     renderEmailQueue();
+    detectUserLocation();
 }
 
 if (document.readyState === 'loading') {
@@ -5109,24 +5110,41 @@ function onDripTargetChange() {
 async function autoScanForListings() {
     const distVal = parseInt(document.getElementById('filter-distance').value) || 5;
     const staleVal = document.getElementById('filter-stale-dom').value || 'all';
-    const searchQuery = document.getElementById('map-search-input').value.trim() || "Miami";
+    let searchQuery = document.getElementById('map-search-input').value.trim();
 
     showToast("Scanning real-world neighborhood radar...");
 
-    try {
-        const nominatimRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(searchQuery)}`);
-        const nominatimData = await nominatimRes.json();
-        
-        if (!nominatimData || nominatimData.length === 0) {
-            showToast("No neighborhood found. Scanning fallback radar...");
-            runMockRadarScan(distVal, staleVal);
-            return;
+    let anchorLat = 25.7617;
+    let anchorLon = -80.1918;
+
+    // Load browser-detected coordinates from storage if available
+    const savedAnchor = localStorage.getItem('revitalize_map_anchor');
+    if (savedAnchor) {
+        try {
+            const parsed = JSON.parse(savedAnchor);
+            anchorLat = parsed.lat;
+            anchorLon = parsed.lon;
+        } catch (e) {}
+    }
+
+    // Override with custom typed search query if entered
+    if (searchQuery) {
+        try {
+            const nominatimRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(searchQuery)}`);
+            const nominatimData = await nominatimRes.json();
+            if (nominatimData && nominatimData.length > 0) {
+                anchorLat = parseFloat(nominatimData[0].lat);
+                anchorLon = parseFloat(nominatimData[0].lon);
+                localStorage.setItem('revitalize_map_anchor', JSON.stringify({ lat: anchorLat, lon: anchorLon }));
+            }
+        } catch (e) {
+            console.error("Nominatim geocoding failed, fallback to anchor coords", e);
         }
+    } else {
+        searchQuery = "Detected Location";
+    }
 
-        const anchorLat = parseFloat(nominatimData[0].lat);
-        const anchorLon = parseFloat(nominatimData[0].lon);
-        localStorage.setItem('revitalize_map_anchor', JSON.stringify({ lat: anchorLat, lon: anchorLon }));
-
+    try {
         const rentCastApiKey = localStorage.getItem('revitalize_rentcast_api_key') || '';
         if (rentCastApiKey) {
             showToast("Querying RentCast database for real listings...");
@@ -5134,11 +5152,14 @@ async function autoScanForListings() {
             const isZip = /^\d{5}$/.test(searchQuery);
             if (isZip) {
                 url += `&zipCode=${searchQuery}`;
-            } else {
+            } else if (searchQuery !== "Detected Location") {
                 const parts = searchQuery.split(',');
                 const city = parts[0].trim();
                 const state = parts[1] ? parts[1].trim() : 'FL';
                 url += `&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+            } else {
+                // If it is detected location coordinate, we query RentCast using lat & lon coordinates!
+                url += `&latitude=${anchorLat}&longitude=${anchorLon}&radius=${distVal}`;
             }
 
             const rcRes = await fetch(url, {
@@ -7665,4 +7686,58 @@ function handleContractorBidSubmit(event) {
     showToast("Contractor bid submitted successfully!");
     closeSubmitBidModal();
     fetchLiveMarketListings(); // re-renders catalog with new bid count
+}
+
+// ================= GEOLOCATION AUTO-DETECTION SYSTEM =================
+function detectUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                console.log(`Detected browser location: lat=${lat}, lon=${lon}`);
+                
+                // Save coordinates to localStorage
+                localStorage.setItem('revitalize_map_anchor', JSON.stringify({ lat, lon }));
+                
+                // Reverse-geocode to get the city name for the inputs
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.address) {
+                            const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "Miami";
+                            const state = data.address.state || "FL";
+                            const fullLoc = `${city}, ${state}`;
+                            
+                            // Fill inputs
+                            const mapInput = document.getElementById('map-search-input');
+                            if (mapInput) mapInput.value = fullLoc;
+                            
+                            const marketInput = document.getElementById('market-search-input');
+                            if (marketInput) marketInput.value = fullLoc;
+                            
+                            showToast(`Location detected: ${fullLoc}`);
+                            
+                            // Trigger automatic scanning based on detected location
+                            autoScanForListings();
+                            fetchLiveMarketListings(fullLoc);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Reverse geocoding failed", e);
+                }
+                
+                autoScanForListings();
+            },
+            (error) => {
+                console.warn("Geolocation denied or error, fallback to Miami", error);
+                autoScanForListings();
+            }
+        );
+    } else {
+        console.warn("Geolocation not supported by browser, default to Miami");
+        autoScanForListings();
+    }
 }
