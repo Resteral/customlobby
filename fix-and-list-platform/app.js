@@ -4262,7 +4262,7 @@ async function fetchLiveMarketListings(customQuery) {
     }
 
     // Try to load real listings from RentCast if API Key is configured
-    const rentCastApiKey = localStorage.getItem('revitalize_rentcast_api_key') || '';
+    const rentCastApiKey = localStorage.getItem('revitalize_rentcast_api_key') || 'WALTSCARPENTRY-878b-f4a6-ad00-b59dd151bd4b';
     if (rentCastApiKey) {
         let url = `https://api.rentcast.io/v1/listings/active?limit=12&status=For%20Sale`;
         const isZip = /^\d{5}$/.test(query);
@@ -5145,7 +5145,7 @@ async function autoScanForListings() {
     }
 
     try {
-        const rentCastApiKey = localStorage.getItem('revitalize_rentcast_api_key') || '';
+        const rentCastApiKey = localStorage.getItem('revitalize_rentcast_api_key') || 'WALTSCARPENTRY-878b-f4a6-ad00-b59dd151bd4b';
         if (rentCastApiKey) {
             showToast("Querying RentCast database for real listings...");
             let url = `https://api.rentcast.io/v1/listings/active?limit=15&status=For%20Sale`;
