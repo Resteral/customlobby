@@ -52,7 +52,14 @@ const SETS_METADATA = {
 // DATABASE UTILITIES
 // ==========================================
 if (fs.existsSync(DATABASE_FILE)) {
-  playersDb = JSON.parse(fs.readFileSync(DATABASE_FILE, 'utf-8'));
+  try {
+    const data = fs.readFileSync(DATABASE_FILE, 'utf-8').trim();
+    playersDb = data ? JSON.parse(data) : {};
+  } catch (e) {
+    console.warn("Corrupt database file found. Re-initializing players database.");
+    playersDb = {};
+    saveDb();
+  }
 } else {
   playersDb = {};
   saveDb();
