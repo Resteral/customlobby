@@ -3259,23 +3259,23 @@ function applyReferralCode(newUsername, code) {
 }
 
 function signInWithDiscordOAuth() {
+  // Only attempt real Supabase OAuth when the client is properly configured
   if (supabaseClient) {
     try {
       showToast("Redirecting to Discord Auth...", "info");
       supabaseClient.auth.signInWithOAuth({
         provider: 'discord',
-        options: {
-          redirectTo: window.location.origin
-        }
+        options: { redirectTo: window.location.origin }
       });
+      return;
     } catch (e) {
       showToast(`Supabase OAuth Error: ${e.message}`, "danger");
     }
-  } else {
-    // Fallback to local dev simulated consent popup modal
-    openDiscordOAuthModal();
   }
+  // No Supabase configured — open the local player-select modal
+  openDiscordOAuthModal();
 }
+
 
 // ==========================================
 // 📅 EVENT CALENDAR & TOURNAMENT INTERACTION
