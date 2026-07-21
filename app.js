@@ -175,6 +175,20 @@ let players = [
 let activeLobbies = {};
 let currentSelectedGame = 'arkheron'; // default selected game for UI display
 
+let supabaseClient = null;
+function initSupabase() {
+  const url = localStorage.getItem('supabase_url') || '';
+  const key = localStorage.getItem('supabase_key') || '';
+  if (url && key && typeof supabase !== 'undefined') {
+    try {
+      supabaseClient = supabase.createClient(url, key);
+      console.log("Supabase Client initialized successfully.");
+    } catch (e) {
+      console.warn("Could not load Supabase client details:", e);
+    }
+  }
+}
+
 // App States
 let appState = {
   currentTab: 'simulator',
@@ -251,6 +265,46 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!pg.teammates) pg.teammates = {};
     });
   });
+
+  // Load custom Supabase credentials if saved
+  const savedUrl = localStorage.getItem('supabase_url') || '';
+  const savedKey = localStorage.getItem('supabase_key') || '';
+  if (savedUrl && document.getElementById('setup-supabase-url')) {
+    document.getElementById('setup-supabase-url').value = savedUrl;
+  }
+  if (savedKey && document.getElementById('setup-supabase-key')) {
+    document.getElementById('setup-supabase-key').value = savedKey;
+  }
+  initSupabase();
+
+  // Check login state
+  const isSignedIn = localStorage.getItem('custom_lobbies_signed_in') === 'true';
+  const loginScr = document.getElementById('login-screen');
+  if (isSignedIn) {
+    if (loginScr) loginScr.style.display = 'none';
+    const savedUser = localStorage.getItem('custom_lobbies_user') || 'Resteral.TV';
+    appState.currentUser = savedUser;
+    
+    // If it was a Discord OAuth link, update header badges
+    const isDiscordLink = localStorage.getItem('custom_lobbies_discord_linked') === 'true';
+    if (isDiscordLink) {
+      appState.discordConnected = true;
+      appState.connectedDiscordUser = savedUser;
+      const connBtn = document.getElementById('connect-discord-btn');
+      const profBadge = document.getElementById('discord-profile-badge');
+      const avatarBadge = document.getElementById('connected-avatar-badge');
+      const nameBadge = document.getElementById('connected-username-badge');
+      const pl = players.find(p => p.username === savedUser);
+      if (connBtn && profBadge && avatarBadge && nameBadge && pl) {
+        connBtn.style.display = 'none';
+        profBadge.style.display = 'inline-flex';
+        avatarBadge.innerText = pl.avatar || '👤';
+        nameBadge.innerText = savedUser;
+      }
+    }
+  } else {
+    if (loginScr) loginScr.style.display = 'flex';
+  }
 
   renderLeaderboard();
   updateVoiceChannelsUI();
@@ -2656,6 +2710,13 @@ function authorizeDiscordAccount() {
   appState.discordConnected = true;
   appState.connectedDiscordUser = selectedUser;
   
+  localStorage.setItem('custom_lobbies_signed_in', 'true');
+  localStorage.setItem('custom_lobbies_user', selectedUser);
+  localStorage.setItem('custom_lobbies_discord_linked', 'true');
+  
+  const loginScr = document.getElementById('login-screen');
+  if (loginScr) loginScr.style.display = 'none';
+  
   const connBtn = document.getElementById('connect-discord-btn');
   const profBadge = document.getElementById('discord-profile-badge');
   const avatarBadge = document.getElementById('connected-avatar-badge');
@@ -2689,6 +2750,13 @@ function disconnectDiscordAccount() {
   appState.discordConnected = false;
   appState.connectedDiscordUser = null;
   
+  localStorage.removeItem('custom_lobbies_signed_in');
+  localStorage.removeItem('custom_lobbies_user');
+  localStorage.removeItem('custom_lobbies_discord_linked');
+  
+  const loginScr = document.getElementById('login-screen');
+  if (loginScr) loginScr.style.display = 'flex';
+  
   const connBtn = document.getElementById('connect-discord-btn');
   const profBadge = document.getElementById('discord-profile-badge');
   
@@ -2698,7 +2766,7 @@ function disconnectDiscordAccount() {
   }
   
   playSound('pick');
-  showToast("Discord account disconnected.", "info");
+  showToast("Session signed out and Discord disconnected.", "info");
   
   renderLeaderboard();
   
@@ -2711,4 +2779,136 @@ function disconnectDiscordAccount() {
   }
   
   closeDiscordOAuthModal();
+}
+
+// ==========================================
+// SUPABASE AUTH LOGIC
+// ==========================================
+
+function saveCustomSupabaseConfig() {
+  const url = document.getElementById('setup-supabase-url').value.trim();
+  const key = document.getElementById('setup-supabase-key').value.trim();
+  
+  if (!url || !key) {
+    showToast("Please enter both the Supabase URL and Anon Key!", "warning");
+    return;
+  }
+  
+  localStorage.setItem('supabase_url', url);
+  localStorage.setItem('supabase_key', key);
+  
+  initSupabase();
+  
+  if (supabaseClient) {
+    showToast("Supabase credentials saved & initialized!", "success");
+  } else {
+    showToast("Supabase SDK is missing or invalid config. Demo Mode fallback active.", "warning");
+  }
+}
+
+async function signInWithSupabaseEmail() {
+  const email = document.getElementById('supabase-email-input').value.trim();
+  const password = document.getElementById('supabase-password-input').value;
+  
+  if (!email || !password) {
+    showToast("Please enter both email and password!", "warning");
+    return;
+  }
+  
+  if (supabaseClient) {
+    try {
+      showToast("Signing in with Supabase...", "info");
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+      
+      const userEmail = data.user.email;
+      const username = userEmail.split('@')[0];
+      
+      appState.currentUser = username;
+      localStorage.setItem('custom_lobbies_signed_in', 'true');
+      localStorage.setItem('custom_lobbies_user', username);
+      
+      const loginScr = document.getElementById('login-screen');
+      if (loginScr) loginScr.style.display = 'none';
+      
+      playSound('match_found');
+      showToast(`Welcome back, ${username}!`, "success");
+      renderLeaderboard();
+    } catch (e) {
+      showToast(`Supabase Auth Error: ${e.message}`, "danger");
+    }
+  } else {
+    // Simulated auth (Demo mode)
+    const username = email.split('@')[0];
+    
+    let pl = players.find(p => p.username === username);
+    if (!pl) {
+      pl = {
+        username,
+        avatar: '👤',
+        bio: 'Competitive player authenticated via demo Supabase.',
+        games: {
+          arkheron: { elo: 1000, wins: 0, losses: 0, kd: "1.00", eloHistory: [1000] },
+          hockey: { elo: 1000, wins: 0, losses: 0, kd: "1.00", eloHistory: [1000] },
+          zealot: { elo: 1000, wins: 0, losses: 0, kd: "1.00", eloHistory: [1000] }
+        }
+      };
+      players.push(pl);
+    }
+    
+    appState.currentUser = username;
+    localStorage.setItem('custom_lobbies_signed_in', 'true');
+    localStorage.setItem('custom_lobbies_user', username);
+    
+    const loginScr = document.getElementById('login-screen');
+    if (loginScr) loginScr.style.display = 'none';
+    
+    playSound('match_found');
+    showToast(`[Demo Mode] Signed in successfully as ${username}!`, "success");
+    renderLeaderboard();
+  }
+}
+
+async function signUpWithSupabaseEmail() {
+  const email = document.getElementById('supabase-email-input').value.trim();
+  const password = document.getElementById('supabase-password-input').value;
+  
+  if (!email || !password) {
+    showToast("Please enter both email and password to sign up!", "warning");
+    return;
+  }
+  
+  if (supabaseClient) {
+    try {
+      showToast("Registering via Supabase...", "info");
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      
+      if (error) throw error;
+      
+      showToast("Sign up successful! Please check your email inbox to confirm.", "success");
+    } catch (e) {
+      showToast(`Supabase Sign Up Error: ${e.message}`, "danger");
+    }
+  } else {
+    const username = email.split('@')[0];
+    showToast(`[Demo Mode] Created profile for ${username}! Signing in...`, "success");
+    
+    setTimeout(() => {
+      signInWithSupabaseEmail();
+    }, 1000);
+  }
+}
+
+function signInAsGuest() {
+  appState.currentUser = 'Resteral.TV';
+  localStorage.setItem('custom_lobbies_signed_in', 'true');
+  localStorage.setItem('custom_lobbies_user', 'Resteral.TV');
+  
+  const loginScr = document.getElementById('login-screen');
+  if (loginScr) loginScr.style.display = 'none';
+  
+  playSound('join');
+  showToast("Signed in as Guest.", "info");
+  renderLeaderboard();
 }
