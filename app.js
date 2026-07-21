@@ -209,7 +209,17 @@ let appState = {
   tournaments: [],
   activeTournamentId: null,
   forumFilter: 'all',
-  forumPosts: []
+  forumPosts: [],
+  advertisedStreams: [
+    {
+      id: 'STREAM-SEED',
+      author: 'Resteral.TV',
+      platform: 'twitch',
+      url: 'https://twitch.tv/resteraltv',
+      title: '🎥 Scrimming live on Arkheron custom lobbies! Join in.',
+      isLive: true
+    }
+  ]
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -243,6 +253,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderLeaderboard();
   updateVoiceChannelsUI();
   viewCodeFile('bot');
+  renderStreamsList();
 });
 
 // Switch Tab
@@ -2514,6 +2525,88 @@ function renderForumsTab() {
         <div style="font-size: 0.85rem; color: var(--dc-text-muted); line-height: 1.5; white-space: pre-wrap;">
           ${post.content}
         </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==========================================
+// LIVE STREAM ADVERTISEMENT LOGIC
+// ==========================================
+
+function toggleAdvertiseForm() {
+  const form = document.getElementById('advertise-stream-form');
+  if (!form) return;
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+  
+  if (isHidden) {
+    document.getElementById('stream-author-input').value = appState.currentUser;
+    document.getElementById('stream-platform-input').value = 'twitch';
+    document.getElementById('stream-url-input').value = 'https://twitch.tv/' + appState.currentUser.toLowerCase().replace('.', '');
+    document.getElementById('stream-title-input').value = '🔴 Playing custom lobbies matchmaking scrims! Join in!';
+  }
+}
+
+function submitStreamAd() {
+  const author = document.getElementById('stream-author-input').value.trim();
+  const platform = document.getElementById('stream-platform-input').value;
+  const url = document.getElementById('stream-url-input').value.trim();
+  const title = document.getElementById('stream-title-input').value.trim() || 'Live Match Playroom Scrims!';
+  
+  if (!author || !url) {
+    showToast("Please fill in the streamer name and URL!", "warning");
+    return;
+  }
+  
+  const newAd = {
+    id: 'STREAM-' + Math.random().toString(36).substr(2, 5).toUpperCase(),
+    author,
+    platform,
+    url,
+    title,
+    isLive: true
+  };
+  
+  appState.advertisedStreams = appState.advertisedStreams || [];
+  // Keep only unique streamers
+  appState.advertisedStreams = appState.advertisedStreams.filter(s => s.author.toLowerCase() !== author.toLowerCase());
+  appState.advertisedStreams.push(newAd);
+  
+  playSound('match_found');
+  showToast("Your livestream advertisement is now LIVE!", "success");
+  
+  toggleAdvertiseForm();
+  renderStreamsList();
+}
+
+function renderStreamsList() {
+  const container = document.getElementById('streams-list-container');
+  if (!container) return;
+  
+  const list = appState.advertisedStreams || [];
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:var(--dc-text-muted); font-size:0.75rem; padding:12px 0;">No active streams promoted right now. Be the first to promote yours!</div>`;
+    return;
+  }
+  
+  container.innerHTML = list.map(s => {
+    const platformEmoji = s.platform === 'twitch' ? '🎮' : (s.platform === 'youtube' ? '🎥' : '🟢');
+    return `
+      <div class="stream-card" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border: 1px solid var(--db-border); border-radius:6px; padding:10px 14px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span class="live-badge" style="background:#ef4444; color:white; font-size:0.65rem; font-weight:bold; padding:2px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:4px; font-style:normal; line-height:1;">
+              <span class="queue-scanning-indicator" style="width:6px; height:6px; background-color:white; margin:0;"></span> LIVE
+            </span>
+            <strong style="color:white; font-size:0.85rem;">${s.author}</strong>
+            <span style="font-size:0.7rem; color:var(--dc-text-muted); font-weight:normal; text-transform:uppercase;">#${s.platform}</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--dc-text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width: 260px;">${s.title}</div>
+        </div>
+        <a href="${s.url}" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px; margin:0; display:flex; align-items:center; gap:4px; text-decoration:none; color:white;">
+          ${platformEmoji} Watch
+        </a>
       </div>
     `;
   }).join('');

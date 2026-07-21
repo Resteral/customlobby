@@ -261,6 +261,54 @@
             </div>
           </div>
 
+          <!-- Live Stream Directory Card -->
+          <div class="db-card" style="margin-top: 1rem; border-top: 3.5px solid var(--dc-red);">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span>📡 Promoted Live Streams</span>
+              <button class="btn btn-secondary" onclick="toggleAdvertiseForm()" style="font-size: 0.75rem; padding: 4px 10px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #f43f5e; margin: 0;">
+                📢 Advertise Stream
+              </button>
+            </div>
+            
+            <!-- Dynamic Streams List -->
+            <div id="streams-list-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Streams populated dynamically -->
+            </div>
+            
+            <!-- Expandable Advertise Form -->
+            <div id="advertise-stream-form" style="display: none; background: rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid var(--db-border); padding: 12px; margin-top: 10px;">
+              <h5 style="margin-top: 0; color: white; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;">Promote Your Stream (Free!)</h5>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div>
+                    <label style="display: block; font-size: 0.65rem; color: var(--dc-text-muted); margin-bottom: 2px;">Streamer Name</label>
+                    <input type="text" id="stream-author-input" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--db-border); background: var(--db-bg); color: white;">
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.65rem; color: var(--dc-text-muted); margin-bottom: 2px;">Platform</label>
+                    <select id="stream-platform-input" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--db-border); background: var(--db-bg); color: white;">
+                      <option value="twitch">Twitch</option>
+                      <option value="youtube">YouTube</option>
+                      <option value="kick">Kick</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.65rem; color: var(--dc-text-muted); margin-bottom: 2px;">Channel URL</label>
+                  <input type="url" id="stream-url-input" placeholder="https://twitch.tv/channel" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--db-border); background: var(--db-bg); color: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.65rem; color: var(--dc-text-muted); margin-bottom: 2px;">Stream Title</label>
+                  <input type="text" id="stream-title-input" placeholder="e.g. Scrimming live on the portal!" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--db-border); background: var(--db-bg); color: white;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px;">
+                  <button class="btn btn-secondary" onclick="toggleAdvertiseForm()" style="font-size: 0.7rem; padding: 4px 8px;">Cancel</button>
+                  <button class="btn btn-primary" onclick="submitStreamAd()" style="font-size: 0.7rem; padding: 4px 10px; background: var(--dc-red); border-color: var(--dc-red);">🚀 Go Live</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
