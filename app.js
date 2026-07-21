@@ -150,14 +150,7 @@ const SETS_METADATA = {
   'Solar Flare': '+25 Armor, +100 Max HP.'
 };
 
-// Static pool of mock players for testing and matchmaking simulation
-const MOCK_PLAYERS_POOL = [
-  { username: 'TofuShark', avatar: '🦊', games: { arkheron: { elo: 1050, wins: 5, losses: 3, kd: "1.25", eloHistory: [1000, 1020, 1050] }, cs: { elo: 1000, wins: 2, losses: 2, kd: "1.00", eloHistory: [1000] }, zealot: { elo: 980, wins: 1, losses: 3, kd: "0.50", eloHistory: [1000, 980] } } },
-  { username: 'TowerGod', avatar: '👑', games: { arkheron: { elo: 1200, wins: 12, losses: 4, kd: "2.10", eloHistory: [1000, 1050, 1120, 1200] }, cs: { elo: 1100, wins: 6, losses: 2, kd: "1.80", eloHistory: [1000, 1100] }, zealot: { elo: 1150, wins: 8, losses: 3, kd: "1.90", eloHistory: [1000, 1150] } } },
-  { username: 'Rynshi', avatar: '🥷', games: { arkheron: { elo: 950, wins: 2, losses: 6, kd: "0.60", eloHistory: [1000, 950] }, cs: { elo: 1020, wins: 3, losses: 2, kd: "1.10", eloHistory: [1000, 1020] }, zealot: { elo: 1000, wins: 0, losses: 0, kd: "1.00", eloHistory: [1000] } } },
-  { username: 'Dahla', avatar: '🧛', games: { arkheron: { elo: 1120, wins: 9, losses: 5, kd: "1.45", eloHistory: [1000, 1060, 1120] }, cs: { elo: 980, wins: 1, losses: 4, kd: "0.40", eloHistory: [1000, 980] }, zealot: { elo: 1080, wins: 5, losses: 2, kd: "1.35", eloHistory: [1000, 1080] } } },
-  { username: 'Grimwold', avatar: '❄️', games: { arkheron: { elo: 1010, wins: 4, losses: 4, kd: "1.05", eloHistory: [1000, 1010] }, cs: { elo: 1040, wins: 5, losses: 3, kd: "1.20", eloHistory: [1000, 1040] }, zealot: { elo: 1030, wins: 4, losses: 3, kd: "1.15", eloHistory: [1000, 1030] } } }
-];
+// (Mock player pool removed — queue fills from real registered players only)
 
 // Clean starting database of competitive players (Current user only)
 let players = JSON.parse(localStorage.getItem('custom_lobbies_players')) || [
@@ -253,55 +246,47 @@ let appState = {
       author: 'Resteral.TV',
       platform: 'twitch',
       url: 'https://twitch.tv/resteral',
-      title: '🎥 Scrimming live on Arkheron custom lobbies! Join in.',
+      title: '🔱 Arkheron custom lobbies live — join the scrim!',
       isLive: true
     },
     {
-      id: 'STREAM-TW-1',
-      author: 'Ninja',
+      id: 'STREAM-ARK-1',
+      author: 'LeodinMain',
       platform: 'twitch',
-      url: 'https://twitch.tv/ninja',
-      title: '🎮 Arena Matchmaking Scrims & Battle Royale customs!',
+      url: 'https://twitch.tv/leodinmain',
+      title: '🧝 Arkheron ranked — Leodin Tempest S-tier gameplay!',
       isLive: true
     },
     {
-      id: 'STREAM-TW-2',
-      author: 'Shroud',
+      id: 'STREAM-ARK-2',
+      author: 'VoidEdani',
       platform: 'twitch',
-      url: 'https://twitch.tv/shroud',
-      title: '🔫 Global Elite CS2 lobbies with viewers & pros!',
+      url: 'https://twitch.tv/voidedani',
+      title: '🔮 Edani Voidbringer theory crafting & scrim coaching!',
       isLive: true
     },
     {
-      id: 'STREAM-TW-3',
-      author: 'xQc',
+      id: 'STREAM-ARK-3',
+      author: 'KarrivTank',
       platform: 'twitch',
-      url: 'https://twitch.tv/xqc',
-      title: '🔥 Reacting to crazy CS draft highlights and scrim matches!',
+      url: 'https://twitch.tv/karrivtank',
+      title: '🛡️ Karriv Solar Flare tank diff — carrying by soaking!',
       isLive: true
     },
     {
-      id: 'STREAM-KK-1',
-      author: 'WestCOL',
+      id: 'STREAM-ARK-K1',
+      author: 'DahlaBlood',
       platform: 'kick',
-      url: 'https://kick.com/westcol',
-      title: '🟢 5v5 Arena Showmatch and Coins Gamble matches!',
+      url: 'https://kick.com/dahlablood',
+      title: '🧛 Dahla Bloodthorn full lifesteal — unkillable 1v3 clips!',
       isLive: true
     },
     {
-      id: 'STREAM-KK-2',
-      author: 'AdinRoss',
+      id: 'STREAM-ARK-K2',
+      author: 'RynshiShadow',
       platform: 'kick',
-      url: 'https://kick.com/adinross',
-      title: '🚀 Hosting 10,000 Coin CS matchmaking lobbies!',
-      isLive: true
-    },
-    {
-      id: 'STREAM-KK-3',
-      author: 'Amouranth',
-      platform: 'kick',
-      url: 'https://kick.com/amouranth',
-      title: '💬 Chatting and gaming with Custom Lobbies teams!',
+      url: 'https://kick.com/rynshishadow',
+      title: '🥷 Rynshi decoy one-shot guide — assassin tech deep dive!',
       isLive: true
     }
   ],
@@ -702,15 +687,6 @@ function parseChatCommand(command, argument, senderUser) {
       appState.queues[game].push(appState.currentUser);
       playSound('join');
     }
-
-    // Since players list might be empty, ensure we check the MOCK_PLAYERS_POOL
-    // and copy them into players if needed to fill the queue
-    const othersPool = MOCK_PLAYERS_POOL.filter(p => p.username !== appState.currentUser);
-    othersPool.forEach(mp => {
-      if (!players.find(p => p.username === mp.username)) {
-        players.push(JSON.parse(JSON.stringify(mp)));
-      }
-    });
 
     const others = players.filter(p => p.username !== appState.currentUser);
     const shuffled = [...others].sort(() => 0.5 - Math.random());
@@ -1116,17 +1092,15 @@ function triggerDraftStart(game) {
 
   updateVoiceChannelsUI();
 
-  const embed = {
-    title: `⚔️ ${requiredPlayers/2}v${requiredPlayers/2} ${game.toUpperCase()} Serpentine Player Draft Starting`,
-    desc: `Captains selected: **${capA.username}** and **${capB.username}**. Drafting in dedicated channel #draft-${game}.`,
-    fields: [
-      { title: '🟢 Team Alpha Captain', val: `${capA.username} (MMR: ${capA.games[game].elo})` },
-      { title: '🔵 Team Beta Captain', val: `${capB.username} (MMR: ${capB.games[game].elo})` },
-      { title: '👥 Selection Pool', val: appState.draft.pool.map((p, idx) => `${idx+1}. **${p}** (MMR: ${players.find(pl=>pl.username===p)?.games[game].elo} - Role: ${players.find(pl=>pl.username===p)?.role || 'Flex'})`).join('\n'), fullwidth: true }
-    ]
-  };
-  
-  writeMessage('TheBot', true, '', embed);
+  const poolText = appState.draft.pool.map((p, idx) => `${idx+1}. **${p}** (MMR: ${players.find(pl=>pl.username===p)?.games[game].elo} - Role: ${players.find(pl=>pl.username===p)?.role || 'Flex'})`).join('\n');
+  const plainMsg = `⚔️ **${requiredPlayers/2}v${requiredPlayers/2} ${game.toUpperCase()} Serpentine Player Draft Starting**\n` +
+    `Captains are selected based on MMR. Take turns picking players in #draft-${game}.\n\n` +
+    `🟢 **Team Alpha Captain**: **${capA.username}** (MMR: ${capA.games[game].elo})\n` +
+    `🔵 **Team Beta Captain**: **${capB.username}** (MMR: ${capB.games[game].elo})\n\n` +
+    `👥 **Players Selection Pool**:\n${poolText}\n\n` +
+    `*Turn: Captain ${capB.username} [Team Beta] • Type -pick [index]*`;
+
+  writeMessage('TheBot', true, plainMsg, null);
   showToast(`Draft started for ${game.toUpperCase()}`, 'success');
 
   document.getElementById('draft-arena-card').style.display = 'block';
@@ -1138,6 +1112,7 @@ function triggerDraftStart(game) {
   }
 
   checkBotPickSchedule();
+  startSimDraftAfkTimer();
 }
 
 function checkBotPickSchedule() {
@@ -1152,6 +1127,7 @@ function checkBotPickSchedule() {
         const pickIndex = Math.floor(Math.random() * pool.length);
         const selected = pool[pickIndex];
         writeMessage(activeCapName, false, `-pick ${selected}`);
+        // Bot pick resets the AFK timer
         setTimeout(() => executeDraftPick(selected), 300);
       }
     }, 1800);
@@ -1166,6 +1142,9 @@ function executeDraftPick(playerUsername) {
   activeDraft.pool = activeDraft.pool.filter(p => p !== playerUsername);
   const activeTeam = currentTurn === 'A' ? activeDraft.teams.teamA : activeDraft.teams.teamB;
   activeTeam.players.push(playerUsername);
+  
+  // Reset AFK timer on every pick
+  startSimDraftAfkTimer();
   
   playSound('pick'); // Play draft pick thud
   writeMessage('TheBot', true, `✨ Captain **${capName}** drafted **${playerUsername}** for **${currentTurn === 'A' ? 'Team Alpha' : 'Team Beta'}**!`);
@@ -1189,6 +1168,7 @@ function executeDraftPick(playerUsername) {
 }
 
 function concludeDrafting() {
+  cancelSimDraftAfkTimer();
   const game = appState.draft.game;
   appState.draft.active = false;
   document.getElementById('draft-arena-card').style.display = 'none';
@@ -1893,13 +1873,6 @@ function checkInTourneyUser(username) {
 function addMockSignups() {
   const t = getActiveTournament();
   if (!t) return;
-
-  // Make sure mock players exist in the main database
-  MOCK_PLAYERS_POOL.forEach(mp => {
-    if (!players.find(p => p.username === mp.username)) {
-      players.push(JSON.parse(JSON.stringify(mp))); // clone it
-    }
-  });
 
   const numTeams = t.numTeams || 2;
   const playersPerTeam = t.game === 'cs' ? 5 : 3;
@@ -3757,7 +3730,7 @@ function searchPlayerMultiStats() {
 
   // Find local user or mock user details
   let dbPlayer = players.find(p => p.username.toLowerCase() === searchQuery.toLowerCase()) || 
-                 MOCK_PLAYERS_POOL.find(p => p.username.toLowerCase() === searchQuery.toLowerCase());
+                 null;
 
   const username = dbPlayer ? dbPlayer.username : searchQuery;
   const avatar = dbPlayer ? (dbPlayer.avatar || '👤') : '👤';
@@ -3781,10 +3754,10 @@ function searchPlayerMultiStats() {
           <span style="font-size:1.8rem;">${avatar}</span>
           <div>
             <h4 style="margin:0; font-size:1.05rem; color:white; text-align:left;">${username}</h4>
-            <span style="font-size:0.7rem; color:var(--dc-text-muted); display:block; text-align:left;">Arkheron Mod Desk</span>
+            <span style="font-size:0.7rem; color:var(--dc-text-muted); display:block; text-align:left;">Arkheron Desk</span>
           </div>
         </div>
-        <span class="badge" style="background:#8b5cf6; margin:0;">🧜 Arkheron Mod</span>
+        <span class="badge" style="background:#8b5cf6; margin:0;">🔱 Arkheron</span>
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:center;">
         <div style="text-align:center; padding:12px; background:rgba(0,0,0,0.2); border-radius:6px; border:1px solid rgba(255,255,255,0.04);">
@@ -4409,7 +4382,7 @@ function renderArkheronPoolStatus() {
     rosterEl.innerHTML = `<span style="font-size:0.75rem; color:var(--dc-text-muted);">Pool is empty.</span>`;
   } else {
     rosterEl.innerHTML = t.pool.map(username => {
-      const pl = players.find(p => p.username === username) || MOCK_PLAYERS_POOL.find(p => p.username === username);
+      const pl = players.find(p => p.username === username);
       const avatar = pl ? (pl.avatar || '👤') : '👤';
       const isCheckedIn = (t.checkedIn || []).includes(username);
       return `

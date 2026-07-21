@@ -520,22 +520,22 @@ client.on('messageCreate', async (message) => {
       pickIdx: 0,
       channelId: draftChannel.id,
       voiceChannels: [vcAlpha?.id, vcBeta?.id].filter(Boolean),
-      game
+      game,
+      afkTimer: null
     };
 
-    const embed = new EmbedBuilder()
-      .setTitle(`⚔️ ${requiredPlayers/2}v${requiredPlayers/2} ${game.toUpperCase()} Serpentine Player Draft Starting`)
-      .setDescription(`Captains are selected based on MMR. Take turns picking players in ${draftChannel}.`)
-      .addFields(
-        { name: `🟢 Team Alpha Captain`, value: `**${capA}** (MMR: ${lobbyPlayers[0].elo})` },
-        { name: `🔵 Team Beta Captain`, value: `**${capB}** (MMR: ${lobbyPlayers[1].elo})` },
-        { name: "👥 Players Selection Pool", value: activeDrafts[game].pool.map((p, idx) => `${idx+1}. **${p}** (MMR: ${playersDb[p].games[game]?.elo || 1000})`).join('\n') }
-      )
-      .setColor('#8b5cf6')
-      .setFooter({ text: `Turn: Captain ${capB} [Team Beta] • Type -pick [index]` });
+    const poolText = activeDrafts[game].pool.map((p, idx) => `${idx+1}. **${p}** (MMR: ${playersDb[p].games[game]?.elo || 1000})`).join('\n');
+    const startMsg = `⚔️ **${requiredPlayers/2}v${requiredPlayers/2} ${game.toUpperCase()} Serpentine Player Draft Starting**\n` +
+      `Captains are selected based on MMR. Take turns picking players in ${draftChannel}.\n\n` +
+      `🟢 **Team Alpha Captain**: **${capA}** (MMR: ${lobbyPlayers[0].elo})\n` +
+      `🔵 **Team Beta Captain**: **${capB}** (MMR: ${lobbyPlayers[1].elo})\n\n` +
+      `👥 **Players Selection Pool**:\n${poolText}\n\n` +
+      `*Turn: Captain ${capB} [Team Beta] • Type -pick [index] • ⏱️ AFK Timer: 3 minutes*`;
 
     message.channel.send(`⚔️ Serpentine player draft for **${game.toUpperCase()}** has begun! Picks will proceed in ${draftChannel}.`);
-    draftChannel.send({ embeds: [embed] });
+    draftChannel.send(startMsg);
+    
+    startDraftAfkTimer(game, draftChannel);
   }
 
   // 7. PICK COMMAND (-pick [index/name])
@@ -543,6 +543,9 @@ client.on('messageCreate', async (message) => {
     if (!activeDrafts[game]) {
       return message.reply("⚠️ No active draft is running in this channel.");
     }
+
+    // Reset the AFK timer whenever a valid pick is attempted
+    startDraftAfkTimer(game, message.guild.channels.cache.get(activeDrafts[game].channelId) || message.channel);
 
     const activeDraft = activeDrafts[game];
     const currentTurn = activeDraft.pickSequence[activeDraft.pickIdx];
@@ -579,24 +582,24 @@ client.on('messageCreate', async (message) => {
       const nextTurn = activeDraft.pickSequence[activeDraft.pickIdx];
       const nextCap = nextTurn === 'A' ? activeDraft.teams.teamA.captain : activeDraft.teams.teamB.captain;
       
-      const embed = new EmbedBuilder()
-        .setTitle(`👥 ${game.toUpperCase()} Serpentine Draft Pool Updates`)
-        .setDescription(`Next Turn: Captain **${nextCap}** (${nextTurn === 'A' ? 'Team Alpha' : 'Team Beta'})\n\n**Team Alpha Roster:** ${activeDraft.teams.teamA.players.join(', ')}\n**Team Beta Roster:** ${activeDraft.teams.teamB.players.join(', ')}\n\n**Remaining Pool:**\n` + activeDraft.pool.map((p, idx) => `${idx+1}. **${p}** (MMR: ${playersDb[p].games[game]?.elo || 1000})`).join('\n'))
-        .setColor('#8b5cf6')
-        .setFooter({ text: `Type -pick [index] to select` });
-      targetChannel.send({ embeds: [embed] });
+      const updatePoolText = activeDraft.pool.map((p, idx) => `${idx+1}. **${p}** (MMR: ${playersDb[p].games[game]?.elo || 1000})`).join('\n');
+      const updateMsg = `👥 **${game.toUpperCase()} Serpentine Draft Pool Updates**\n` +
+        `Next Turn: Captain **${nextCap}** (${nextTurn === 'A' ? 'Team Alpha' : 'Team Beta'})\n\n` +
+        `**Team Alpha Roster:** ${activeDraft.teams.teamA.players.join(', ')}\n` +
+        `**Team Beta Roster:** ${activeDraft.teams.teamB.players.join(', ')}\n\n` +
+        `**Remaining Pool:**\n${updatePoolText}\n\n` +
+        `*Type -pick [index] to select*`;
+      targetChannel.send(updateMsg);
     } else {
-      // Draft complete
-      const embed = new EmbedBuilder()
-        .setTitle(`🎮 ${game.toUpperCase()} Draft Concluded - Match Active!`)
-        .setDescription("Rosters are locked. Connect inside Custom Lobbies game server.")
-        .addFields(
-          { name: `🟢 Team Alpha (${activeDraft.teams.teamA.captain})`, value: `**Players:** ${activeDraft.teams.teamA.players.join(', ')}` },
-          { name: `🔵 Team Beta (${activeDraft.teams.teamB.captain})`, value: `**Players:** ${activeDraft.teams.teamB.players.join(', ')}` }
-        )
-        .setColor('#10b981')
-        .setFooter({ text: 'Connect info sent to captains' });
-      targetChannel.send({ embeds: [embed] });
+      // Draft complete — cancel AFK timer
+      cancelDraftAfkTimer(game);
+
+      const concludeMsg = `🎮 **${game.toUpperCase()} Draft Concluded - Match Active!**\n` +
+        `Rosters are locked. Connect inside Custom Lobbies game server.\n\n` +
+        `🟢 **Team Alpha (${activeDraft.teams.teamA.captain}):** ${activeDraft.teams.teamA.players.join(', ')}\n` +
+        `🔵 **Team Beta (${activeDraft.teams.teamB.captain}):** ${activeDraft.teams.teamB.players.join(', ')}\n\n` +
+        `*Connect info sent to captains*`;
+      targetChannel.send(concludeMsg);
 
       // Clean up temporary voice channels and strip Captain roles after 2 minutes
       setTimeout(() => {
@@ -680,9 +683,51 @@ client.on('messageCreate', async (message) => {
       });
       saveDb();
 
+      cancelDraftAfkTimer(game);
       delete activeDrafts[game];
     }
   }
+
+// ==========================================
+// ⏱️ AFK DRAFT TIMER HELPERS
+// ==========================================
+
+const AFK_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+
+function startDraftAfkTimer(game, channel) {
+  // Clear any existing timer first
+  cancelDraftAfkTimer(game);
+
+  if (!activeDrafts[game]) return;
+
+  activeDrafts[game].afkTimer = setTimeout(async () => {
+    if (!activeDrafts[game]) return;
+
+    const draft = activeDrafts[game];
+    const currentTurn = draft.pickSequence[draft.pickIdx];
+    const afkCap = currentTurn === 'A' ? draft.teams.teamA.captain : draft.teams.teamB.captain;
+
+    try {
+      await channel.send(
+        `⏱️ **AFK Draft Cancelled — ${game.toUpperCase()}**\n` +
+        `Captain **${afkCap}** did not make a pick within **3 minutes**.\n` +
+        `The draft has been cancelled. All players have been released back to the queue.`
+      );
+    } catch (err) {
+      console.error('Failed to send AFK cancellation message:', err);
+    }
+
+    cancelDraftAfkTimer(game);
+    delete activeDrafts[game];
+  }, AFK_TIMEOUT_MS);
+}
+
+function cancelDraftAfkTimer(game) {
+  if (activeDrafts[game]?.afkTimer) {
+    clearTimeout(activeDrafts[game].afkTimer);
+    activeDrafts[game].afkTimer = null;
+  }
+}
 
   // 8. STATS
   else if (command === 'stats') {
@@ -1163,14 +1208,14 @@ client.on('messageCreate', async (message) => {
     const favChar = characters[Math.abs(hash) % characters.length];
 
     const embed = new EmbedBuilder()
-      .setTitle(`🧜 Arkheron Mod Stats: ${key}`)
+      .setTitle(`🔱 Arkheron Stats: ${key}`)
       .addFields(
         { name: '🏆 Matchmaking ELO', value: `**${elo} ELO**`, inline: true },
         { name: '📊 Winrate', value: `\`${winrate}%\` (${wins} W / ${losses} L)`, inline: true },
         { name: '🧝 Preferred Hero', value: `\`${favChar}\``, inline: true }
       )
       .setColor('#8b5cf6')
-      .setFooter({ text: 'Arkheron Mod Matchmaking Core' });
+      .setFooter({ text: 'Arkheron Matchmaking Core' });
     message.channel.send({ embeds: [embed] });
   }
 
