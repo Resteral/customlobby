@@ -603,6 +603,8 @@ function renderLeaderboard() {
     const streak = pg.streak || 0;
     const streakLabel = streak > 0 ? `🔥 ${streak}W` : streak < 0 ? `❄️ ${Math.abs(streak)}L` : '—';
     const isMe  = p.username === appState.currentUser;
+    const isSupporter = (p.username.toLowerCase().includes('.cl') || (p.ingameName && p.ingameName.toLowerCase().includes('.cl')));
+    const supporterBadge = isSupporter ? `<span style="font-size: 0.65rem; background: linear-gradient(90deg, #8b5cf6, #3b82f6); color: white; padding: 1px 5px; border-radius: 4px; font-weight: bold; box-shadow: 0 0 8px rgba(139,92,246,0.5); margin-left: 4px; vertical-align: middle;" title=".cl Supporter">💎 .cl</span>` : '';
     const rowId = `lb-expand-${p.username.replace(/\W/g, '')}`;
 
     // All 3 games mini stats for expanded view
@@ -635,7 +637,7 @@ function renderLeaderboard() {
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:1.4rem;">${p.avatar || '👤'}</span>
             <div>
-              <div style="font-weight:700;color:${isMe?'#a78bfa':'white'};font-size:0.88rem;">${p.username}${isMe?' (You)':''}</div>
+              <div style="font-weight:700;color:${isMe?'#a78bfa':'white'};font-size:0.88rem;">${p.username}${isMe?' (You)':''}${supporterBadge}</div>
               <div style="font-size:0.65rem;color:var(--dc-text-muted);">${streakLabel}</div>
             </div>
           </div>
@@ -1934,6 +1936,8 @@ function renderProfilesTab() {
 
     const hasVip = p.unlockedRewards && p.unlockedRewards.includes('badge-vip') ? '👑 ' : '';
     const hasChal = p.unlockedRewards && p.unlockedRewards.includes('badge-chal') ? '🚀 ' : '';
+    const isSupporter = (p.username.toLowerCase().includes('.cl') || (p.ingameName && p.ingameName.toLowerCase().includes('.cl')));
+    const supporterBadge = isSupporter ? `<span style="font-size: 0.65rem; background: linear-gradient(90deg, #8b5cf6, #3b82f6); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; box-shadow: 0 0 8px rgba(139,92,246,0.5); margin-left: 6px; display: inline-block;">💎 .cl Supporter</span>` : '';
 
     const activeTourneys = appState.tournaments.filter(t => t.pool && t.pool.includes(p.username));
     let tourneyHtml = '';
@@ -1953,6 +1957,7 @@ function renderProfilesTab() {
           <div>
             <div style="font-weight: bold; font-size: 0.9rem; color: white;">
               ${hasVip}${hasChal}${p.username}
+              ${supporterBadge}
               <span style="font-size: 0.65rem; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 12px; margin-left: 6px; border: 1.5px solid var(--db-border); color: #c084fc;">
                 ${p.role || 'Flex'}
               </span>
