@@ -2,6 +2,19 @@
 // CUSTOM LOBBIES MATCHMAKER PORTAL
 // ==========================================
 
+async function notifyDiscord(channel, embedData, content = null) {
+  try {
+    const payload = { channel, embed: embedData, content };
+    await fetch('/api/discord/announce', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn("Failed to notify Discord API:", err);
+  }
+}
+
 // ==========================================
 // 🌌 LANDING SCREEN ENGINE
 // ==========================================
@@ -23,19 +36,6 @@ function enterLobby() {
     const loginScr = document.getElementById('login-screen');
     if (loginScr) loginScr.style.display = 'flex';
   }, 200);
-}
-
-function enterLobbyGuest() {
-  const wipe = document.getElementById('land-wipe');
-  if (wipe) {
-    wipe.classList.add('wipe-go');
-    setTimeout(() => {
-      const ls = document.getElementById('landing-screen');
-      if (ls) ls.classList.add('land-hidden');
-      setTimeout(() => { if (ls) ls.style.display = 'none'; }, 700);
-      signInAsGuest();
-    }, 280);
-  }
 }
 
 // Particle system
@@ -551,8 +551,6 @@ function switchTab(tabId) {
     renderProfilesTab();
   } else if (tabId === 'tournaments') {
     renderTournamentsTab();
-  } else if (tabId === 'forums') {
-    renderForumsTab();
   } else if (tabId === 'calendar') {
     renderCalendar();
   } else if (tabId === 'casino') {
@@ -783,6 +781,7 @@ function handleSendChat(event) {
   input.value = '';
 
   writeMessage(appState.currentUser, false, messageText);
+  notifyDiscord(appState.activeChannel || 'arkheron', null, `**[Web UI] ${appState.currentUser}**: ${messageText}`);
 
   let prefix = '';
   if (messageText.startsWith('-')) prefix = '-';
@@ -2148,6 +2147,13 @@ function initCustomTournament() {
   }
 
   showToast(`Tournament created for ${game.toUpperCase()}!`, 'success');
+  
+  notifyDiscord(game, {
+    title: `🏆 New ${game.toUpperCase()} Tournament: Community Open Cup`,
+    description: `A new ${type} draft tournament for **${numTeams} teams** has been created by **${appState.currentUser}**! Head to the Custom Lobbies UI to register.`,
+    color: '#fbbf24'
+  });
+  
   renderTournamentsTab();
 }
 
@@ -2744,7 +2750,7 @@ function renderTournamentsTab() {
         const teamColor = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#f43f5e', '#6366f1', '#06b6d4', '#84cc16', '#eab308', '#a855f7', '#d946ef', '#0ea5e9'][cIdx % 15];
         return `
           <div class="db-card" style="padding: 10px; background: rgba(0,0,0,0.15); border-top: 3px solid ${teamColor};">
-            <div style="font-weight: bold; color: ${teamColor}; font-size: 0.85rem; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Team ${cap}</div>
+            <div style="font-weight: bold; color: ${teamColor}; font-size: 0.85rem; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px;">Team ${cap}</div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
               ${t.teams[cap].map(p => `<div style="font-size:0.75rem; font-weight:bold; color:white;">• ${p}</div>`).join('')}
             </div>
@@ -2901,46 +2907,8 @@ function renderTournamentsTab() {
 }
 
 // ==========================================
-// COMMUNITY FORUMS LOGIC
+// LIVE STREAM ADVERTISEMENT LOGIC
 // ==========================================
-
-function submitForumPost() {
-  const titleInput = document.getElementById('forum-title-input');
-  const catSelect = document.getElementById('forum-category-input');
-  const contentInput = document.getElementById('forum-content-input');
-
-  const title = titleInput.value.trim();
-  const category = catSelect.value;
-  const content = contentInput.value.trim();
-
-  if (!title || !content) {
-    showToast("Please fill in both the title and message!", "warning");
-    return;
-  }
-
-  const newPost = {
-    id: 'POST-' + Math.random().toString(36).substr(2, 5).toUpperCase(),
-    author: appState.currentUser,
-    title,
-    content,
-    category,
-    createdAt: new Date().toISOString()
-  };
-
-  appState.forumPosts.push(newPost);
-  localStorage.setItem('custom_lobbies_forum_posts', JSON.stringify(appState.forumPosts));
-  
-  titleInput.value = '';
-  contentInput.value = '';
-
-  showToast("Forum post published!", "success");
-  renderForumsTab();
-}
-
-function filterForumCategory(category) {
-  appState.forumFilter = category;
-  renderForumsTab();
-}
 
 function navigateToAuthorProfile(authorName) {
   const user = players.find(p => p.username === authorName);
@@ -2963,57 +2931,20 @@ function navigateToAuthorProfile(authorName) {
 }
 
 function renderForumsTab() {
-  const feedContainer = document.getElementById('forum-posts-feed-container');
-  if (!feedContainer) return;
+  const container = document.getElementById('forums-posts-container');
+  if (!container) return;
+  
+  const filtered = appState.forumFilter === 'all' 
+    ? appState.forumPosts 
+    : appState.forumPosts.filter(p => p.category === appState.forumFilter);
 
-  const filter = appState.forumFilter;
-  const filteredPosts = appState.forumPosts.filter(p => filter === 'all' || p.category === filter);
-
-  const sorted = [...filteredPosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-  if (sorted.length === 0) {
-    feedContainer.innerHTML = `
-      <div style="text-align: center; color: var(--dc-text-muted); padding: 40px 0;">
-        <span style="font-size: 2.5rem; display: block; margin-bottom: 8px;">📡</span>
-        No posts inside this category. Be the first to start a discussion!
-      </div>
-    `;
-    return;
-  }
-
-  feedContainer.innerHTML = sorted.map(post => {
-    const author = players.find(p => p.username === post.author) || {
-      username: post.author,
-      avatar: '👤',
-      color: '#7c3aed',
-      games: { arkheron: { elo: 1000 }, cs: { elo: 1000 }, zealot: { elo: 1000 } }
-    };
-
-    const dateStr = new Date(post.createdAt).toLocaleDateString() + ' ' + new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const arkElo = author.games.arkheron?.elo || 1000;
-    const csElo = author.games.cs?.elo || 1000;
-    const zealElo = author.games.zealot?.elo || 1000;
-    const avgElo = Math.round((arkElo + csElo + zealElo) / 3);
-
+  container.innerHTML = filtered.map(post => {
     return `
-      <div class="db-card" style="padding: 16px; border-left: 4px solid ${author.color || '#7c3aed'}; background: var(--dc-bg-sidebar); display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 1.5rem;">${author.avatar || '👤'}</span>
-            <div>
-              <div onclick="navigateToAuthorProfile('${author.username}')" style="font-weight: bold; color: white; cursor: pointer; text-decoration: underline; font-size: 0.95rem;">
-                ${author.username}
-              </div>
-              <div style="font-size: 0.75rem; color: var(--dc-text-muted);">Avg MMR: <strong style="color: #a78bfa;">${avgElo}</strong> • Posted on ${dateStr}</div>
-            </div>
-          </div>
-          <span style="font-size: 0.75rem; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--db-border); color: white;">
-            #${post.category.toUpperCase()}
-          </span>
-        </div>
-        <div style="font-weight: bold; font-size: 1.1rem; color: white; margin-top: 4px;">
-          ${post.title}
+      <div class="db-card" style="padding: 16px; background: var(--dc-bg-chat); border: 1px solid var(--db-border);">
+        <div style="font-weight: bold; color: white; font-size: 1.1rem; margin-bottom: 8px;">${post.title}</div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 0.75rem; color: var(--dc-text-muted);">
+          <span style="background: rgba(139,92,246,0.1); color: #a78bfa; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${post.author}</span>
+          <span>• ${new Date(post.createdAt).toLocaleDateString()}</span>
         </div>
         <div style="font-size: 0.85rem; color: var(--dc-text-muted); line-height: 1.5; white-space: pre-wrap;">
           ${post.content}
@@ -3433,6 +3364,12 @@ async function signUpWithSupabaseEmail() {
         applyReferralCode(username, referralCode);
       }
       
+      notifyDiscord('arkheron', {
+        title: `👋 New Player Registered: ${username}`,
+        description: `**${username}** has joined Custom Lobbies via Supabase Auth! Starting MMR: 1000.`,
+        color: '#10b981'
+      });
+      
       showToast("Sign up successful! Please check your email inbox to confirm.", "success");
     } catch (e) {
       showToast(`Supabase Sign Up Error: ${e.message}`, "danger");
@@ -3445,21 +3382,6 @@ async function signUpWithSupabaseEmail() {
       signInWithSupabaseEmail();
     }, 1000);
   }
-}
-
-function signInAsGuest() {
-  appState.currentUser = 'Resteral.TV';
-  localStorage.setItem('custom_lobbies_signed_in', 'true');
-  localStorage.setItem('custom_lobbies_user', 'Resteral.TV');
-  
-  const loginScr = document.getElementById('login-screen');
-  if (loginScr) loginScr.style.display = 'none';
-  
-  checkAdminStatus();
-  
-  playSound('join');
-  showToast("Signed in as Guest.", "info");
-  renderLeaderboard();
 }
 
 function checkAdminStatus() {
@@ -3767,6 +3689,13 @@ function addNewCalendarEvent() {
   dateInput.value = '';
 
   showToast("Custom event scheduled!", "success");
+  
+  notifyDiscord(game, {
+    title: `📅 New Event Scheduled: ${name}`,
+    description: `**Game:** ${game.toUpperCase()}\n**Date:** ${date}\n**Organizer:** ${appState.currentUser}\n\nJoin the event on the Calendar tab!`,
+    color: '#8b5cf6'
+  });
+  
   renderCalendar();
 }
 

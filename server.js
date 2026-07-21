@@ -17,9 +17,39 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
+let discordBot = null;
+
 const server = http.createServer((req, res) => {
   const rawPath = req.url.split('?')[0];
   const urlPath = rawPath.toLowerCase();
+
+  // 🚀 Discord API Bridge 🚀
+  if (req.method === 'POST' && urlPath === '/api/discord/announce') {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        if (!discordBot) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: "Discord bot not running locally" }));
+        }
+        
+        const success = await discordBot.sendAnnouncement(payload.channel, payload.embed, payload.content);
+        if (success) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: "Failed to send message to Discord" }));
+        }
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: "Invalid JSON payload" }));
+      }
+    });
+    return;
+  }
 
   // ── /clicker shortcut ─────────────────────────────────────────────
   if (urlPath === '/clicker') {
@@ -83,7 +113,7 @@ const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 if (DISCORD_BOT_TOKEN && DISCORD_BOT_TOKEN !== 'YOUR_DISCORD_BOT_TOKEN') {
   console.log('DISCORD_BOT_TOKEN detected in environment. Initializing Discord bot...');
   try {
-    require('./bot.js');
+    discordBot = require('./bot.js');
   } catch (error) {
     console.error('Failed to load or start Discord bot:', error);
   }

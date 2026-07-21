@@ -1686,9 +1686,30 @@ function cancelDraftAfkTimer(game) {
 
 const token = process.env.DISCORD_BOT_TOKEN;
 if (!token || token === 'YOUR_DISCORD_BOT_TOKEN') {
-  console.error("❌ Error: DISCORD_BOT_TOKEN is not configured in your .env file!");
-  process.exit(1);
+  console.error("❌ Error: DISCORD_BOT_TOKEN is not configured in your .env file! Bot will not start.");
+} else {
+  client.login(token).catch(err => {
+    console.error("❌ Failed to log in to Discord:", err);
+  });
 }
-client.login(token).catch(err => {
-  console.error("❌ Failed to log in to Discord:", err);
-});
+
+module.exports = {
+  client,
+  sendAnnouncement: async (channelName, embedOptions, content) => {
+    if (!client.isReady()) return false;
+    const channel = client.channels.cache.find(c => c.name.includes(channelName) && c.isTextBased());
+    if (channel) {
+      try {
+        const payload = {};
+        if (content) payload.content = content;
+        if (embedOptions) payload.embeds = [new EmbedBuilder(embedOptions)];
+        await channel.send(payload);
+        return true;
+      } catch(e) {
+        console.error("Error sending announcement to Discord:", e);
+        return false;
+      }
+    }
+    return false;
+  }
+};
