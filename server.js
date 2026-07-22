@@ -29,6 +29,12 @@ const server = http.createServer(async (req, res) => {
   const rawPath = req.url.split('?')[0];
   const urlPath = rawPath.toLowerCase();
 
+  // Suppress favicon 404 errors
+  if (urlPath === '/favicon.ico') {
+    res.writeHead(204);
+    return res.end();
+  }
+
   // 🚀 Discord OAuth2 Endpoints 🚀
   if (urlPath === '/auth/discord' && req.method === 'GET') {
     if (!DISCORD_CLIENT_ID) {

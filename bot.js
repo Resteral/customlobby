@@ -144,7 +144,7 @@ let activeDrafts = {};
 let activeLobbies = {};
 let activeTournament = null;
 
-client.once('ready', () => {
+client.once(Events.ClientReady, () => {
   console.log("Custom Lobbies Bot is online!");
 });
 
