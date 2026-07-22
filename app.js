@@ -3,6 +3,12 @@
 // TABS & NAVIGATION
 // ==========================================
 window.switchTab = function(tabId) {
+  // Update URL hash without jumping
+  if (history.replaceState) {
+    history.replaceState(null, null, '#' + tabId);
+  } else {
+    window.location.hash = '#' + tabId;
+  }
   document.querySelectorAll('header .tab-btn').forEach(btn => btn.classList.remove('active'));
   const targetBtn = document.getElementById('tab-btn-' + tabId);
   if (targetBtn) targetBtn.classList.add('active');
@@ -672,3 +678,13 @@ window.selectUniversalGame = function(g) {
   
   document.getElementById('widget-queue-max').innerText = g.team_size * 2;
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Wait a small bit for any auth redirect to finish
+  setTimeout(() => {
+    const hash = window.location.hash.substring(1);
+    if (hash && document.getElementById('tab-btn-' + hash)) {
+      switchTab(hash);
+    }
+  }, 100);
+});

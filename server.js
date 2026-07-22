@@ -7,7 +7,12 @@ const jwt = require('jsonwebtoken');
 // ==========================================
 // JSON DATABASE INITIALIZATION (Fallback to prevent Native Binding Crashes)
 // ==========================================
-const dbPath = path.join(__dirname, 'database.json');
+
+// Fallback to /app/data if it exists (Railway persistent volume)
+const volumeDir = '/app/data';
+const dbDir = fs.existsSync(volumeDir) ? volumeDir : __dirname;
+const dbPath = path.join(dbDir, 'database.json');
+
 let db = {
   users: [],
   games: [
