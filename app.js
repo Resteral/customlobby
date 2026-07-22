@@ -1,5 +1,27 @@
 
 // ==========================================
+// AUTH & MODALS
+// ==========================================
+window.openDiscordOAuthModal = function() {
+  const loginScr = document.getElementById('login-screen');
+  if (loginScr) loginScr.style.display = 'flex';
+};
+
+window.closeDiscordOAuthModal = function() {
+  const loginScr = document.getElementById('login-screen');
+  if (loginScr) loginScr.style.display = 'none';
+};
+
+window.requireAuth = function() {
+  if (!appState.currentUser) {
+    openDiscordOAuthModal();
+    return false;
+  }
+  return true;
+};
+
+
+// ==========================================
 // TABS & NAVIGATION
 // ==========================================
 window.switchTab = function(tabId) {
@@ -432,7 +454,7 @@ async function checkAuthSession() {
       appState.currentUser = data.user.username;
       localStorage.setItem("custom_lobbies_signed_in", "true");
       document.getElementById("login-screen").style.display = "none";
-      document.getElementById("app-container").style.display = "flex";
+      
       switchTab("simulator");
       renderLeaderboard();
       showToast("Welcome back, " + data.user.username + "!", "success");
