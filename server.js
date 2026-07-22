@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const { Server } = require('socket.io');
 const cookie = require('cookie');
 
 const PORT = process.env.PORT || 3002; // Dynamically bound port for platforms like Railway or local testing

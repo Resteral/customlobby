@@ -156,6 +156,22 @@ client.on('messageCreate', async (message) => {
 
   registerPlayer(username);
 
+  if (global.io) {
+    global.io.emit('discordMessage', {
+      id: message.id,
+      channelId: message.channel.id,
+      channelName: message.channel.name,
+      author: {
+        id: message.author.id,
+        username: message.author.username,
+        avatar: message.author.displayAvatarURL()
+      },
+      content: message.content,
+      timestamp: message.createdTimestamp
+    });
+  }
+
+
   // Parse Command prefixes: -, !, or /
   let command = '';
   let argument = '';

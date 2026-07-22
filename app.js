@@ -402,3 +402,111 @@ async function checkAuthSession() {
   } catch (err) {}
 }
 document.addEventListener("DOMContentLoaded", checkAuthSession);
+
+
+// ==========================================
+// 🔴 REAL-TIME DISCORD SYNC (WebSockets)
+// ==========================================
+const socket = (typeof io !== 'undefined') ? io() : null;
+
+let currentDiscordChannelId = '1328080649733472288'; // Default fallback
+
+if (socket) {
+  socket.on('discordMessage', (msg) => {
+    // Append to chat if it matches current channel or if we don't care about channel filtering yet
+    // For simplicity, we just append everything since we assume they are in the lobby
+    const container = document.getElementById('chat-messages');
+    if (container) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'dc-msg';
+      msgDiv.innerHTML = `
+        <div class="dc-msg-avatar" style="background-image: url('${msg.author.avatar}'); background-size: cover;"></div>
+        <div class="dc-msg-content">
+          <div class="dc-msg-header">
+            <span class="dc-msg-username">${msg.author.username}</span>
+            <span class="dc-msg-time">Just now</span>
+          </div>
+          <div class="dc-msg-text">${msg.content}</div>
+        </div>
+      `;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+      
+      // Play pop sound
+      if (typeof playSound === 'function') {
+        playSound('message');
+      }
+    }
+  });
+}
+
+window.handleSendChat = function(event) {
+  event.preventDefault();
+  const input = document.getElementById('chat-input-field');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  if (socket) {
+    socket.emit('sendMessage', {
+      channelId: currentDiscordChannelId, // You could map this dynamically
+      content: text,
+      username: appState.currentUser || 'Guest'
+    });
+  }
+  
+  // Optimistically render it in UI immediately
+  const container = document.getElementById('chat-messages');
+  if (container) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'dc-msg';
+    msgDiv.innerHTML = `
+      <div class="dc-msg-avatar" style="background-color: #d97736;"></div>
+      <div class="dc-msg-content">
+        <div class="dc-msg-header">
+          <span class="dc-msg-username">${appState.currentUser || 'Guest'}</span>
+          <span class="dc-msg-time">Just now</span>
+        </div>
+        <div class="dc-msg-text">${text}</div>
+      </div>
+    `;
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+  }
+  
+  input.value = '';
+}
+
+// Fetch real channels on load
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/discord/channels');
+    const channels = await res.json();
+    if (channels && channels.length > 0) {
+      currentDiscordChannelId = channels[0].id;
+      const list = document.querySelector('.dc-channels-list');
+      if (list) {
+        // Keep the titles, but replace the text channels
+        let html = '<div class="dc-category-title">Text Channels</div>';
+        channels.forEach((c, i) => {
+          html += `
+            <a href="#" class="dc-channel-item ${i === 0 ? 'active' : ''}" onclick="currentDiscordChannelId='${c.id}'; document.querySelectorAll('.dc-channel-item').forEach(el=>el.classList.remove('active')); this.classList.add('active'); return false;">
+              <span>#</span> ${c.name}
+            </a>
+          `;
+        });
+        
+        // Append voice channel mocks just so it still looks cool
+        html += `
+          <div class="dc-category-title" style="margin-top:12px;">Voice Channels</div>
+          <div class="dc-channel-item" style="cursor:default;">
+            <span>🔊</span> Lobby Room
+          </div>
+        `;
+        
+        list.innerHTML = html;
+      }
+    }
+  } catch(e) {
+    console.warn('Could not load Discord channels');
+  }
+});
