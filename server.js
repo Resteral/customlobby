@@ -41,7 +41,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500); return res.end('Discord Client ID not configured');
     }
     const redirectUri = encodeURIComponent(`${HOST_URL}/auth/discord/callback`);
-    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=identify%20guilds.join`;
     res.writeHead(302, { Location: authUrl });
     return res.end();
   }
@@ -77,13 +77,29 @@ const server = http.createServer(async (req, res) => {
       });
       const userData = await userRes.json();
 
+      // Automatically add user to the Discord Server
+      if (DISCORD_BOT_TOKEN) {
+        try {
+          await fetch(`https://discord.com/api/guilds/1503523944605683862/members/${userData.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bot ${DISCORD_BOT_TOKEN}`
+            },
+            body: JSON.stringify({ access_token: tokenData.access_token })
+          });
+        } catch (e) {
+          console.error("Failed to add user to guild:", e);
+        }
+      }
+
       const jwtToken = jwt.sign(
         { id: userData.id, username: userData.username, avatar: userData.avatar },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
-      res.setHeader('Set-Cookie', cookie.stringifySetCookie('auth_token', jwtToken, {
+      res.setHeader('Set-Cookie', cookie.serialize('auth_token', jwtToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',
@@ -100,7 +116,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (urlPath === '/api/me' && req.method === 'GET') {
-    const cookies = cookie.parseCookie(req.headers.cookie || '');
+    const cookies = cookie.parse(req.headers.cookie || '');
     const token = cookies.auth_token;
     if (!token) {
       res.writeHead(401, { 'Content-Type': 'application/json' });

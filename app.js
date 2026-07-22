@@ -25,16 +25,47 @@ function enterLobby() {
   const wipe = document.getElementById('land-wipe');
   if (wipe) {
     wipe.classList.add('wipe-go');
+// ==========================================
+// CUSTOM LOBBIES MATCHMAKER PORTAL
+// ==========================================
+
+async function notifyDiscord(channel, embedData, content = null) {
+  try {
+    const payload = { channel, embed: embedData, content };
+    await fetch('/api/discord/announce', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn("Failed to notify Discord API:", err);
+  }
+}
+
+// ==========================================
+// 🌌 LANDING SCREEN ENGINE
+// ==========================================
+
+function enterLobby() {
+  const btn = document.getElementById('land-enter-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+  const wipe = document.getElementById('land-wipe');
+  if (wipe) {
+    wipe.classList.add('wipe-go');
     setTimeout(() => {
       const ls = document.getElementById('landing-screen');
       if (ls) ls.classList.add('land-hidden');
       setTimeout(() => { if (ls) ls.style.display = 'none'; }, 700);
     }, 280);
   }
-  // Show the login screen in the middle of the wipe
+  // Show the login screen in the middle of the wipe (only if not signed in)
   setTimeout(() => {
-    const loginScr = document.getElementById('login-screen');
-    if (loginScr) loginScr.style.display = 'flex';
+    if (localStorage.getItem("custom_lobbies_signed_in") !== "true") {
+      const loginScr = document.getElementById('login-screen');
+      if (loginScr) loginScr.style.display = 'flex';
+    } else {
+      document.getElementById("app-container").style.display = "flex";
+    }
   }, 200);
 }
 
@@ -107,9 +138,9 @@ function initLandingParticles() {
 
 // Hide the login screen until the user enters from the landing page
 document.addEventListener('DOMContentLoaded', () => {
-  // If a profile route injected __PROFILE_PLAYER__, auto-sign in
-  if (window.__PROFILE_PLAYER__) {
-    const name = window.__PROFILE_PLAYER__;
+  // If a profile route injected __PROFILE_SLUG__, auto-sign in
+  if (window.__PROFILE_SLUG__) {
+    const name = window.__PROFILE_SLUG__;
     appState.currentUser = name;
     localStorage.setItem('custom_lobbies_signed_in', 'true');
     localStorage.setItem('custom_lobbies_user', name);
@@ -391,13 +422,15 @@ async function checkAuthSession() {
     const res = await fetch("/api/me");
     const data = await res.json();
     if (data.user) {
-      appState.currentUser = data.user.username;
-      localStorage.setItem("custom_lobbies_signed_in", "true");
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("app-container").style.display = "flex";
-      switchTab("simulator");
-      renderLeaderboard();
-      showToast("Welcome back, " + data.user.username + "!", "success");
+        appState.currentUser = data.user.username;
+        localStorage.setItem("custom_lobbies_signed_in", "true");
+        document.getElementById("login-screen").style.display = "none";
+        const ls = document.getElementById('landing-screen');
+        if (ls) ls.style.display = 'none';
+        document.getElementById("app-container").style.display = "flex";
+        switchTab("simulator");
+        renderLeaderboard();
+        showToast("Welcome back, " + data.user.username + "!", "success");
     }
   } catch (err) {}
 }
