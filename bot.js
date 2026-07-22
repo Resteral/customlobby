@@ -5,7 +5,7 @@
  * Uses Discord.js v14
  */
 
-const { Client, GatewayIntentBits, EmbedBuilder, ChannelType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, Events } = require('discord.js');
 const fs = require('fs');
 require('dotenv').config();
 
