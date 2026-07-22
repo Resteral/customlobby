@@ -552,7 +552,7 @@ window.toggleQueue = function() {
         username: appState.currentUser
       });
     }
-    showToast(Joined  Queue!, "success"); if(typeof playSound==='function')playSound('join');
+    showToast(`Joined ${widgetSelectedGame.toUpperCase()} Queue!`, "success"); if(typeof playSound==='function')playSound('join');
     
     // TODO: Actually tell server API to add to DB queue
     

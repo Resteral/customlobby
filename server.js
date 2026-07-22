@@ -358,6 +358,25 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
+
+// ==========================================
+// WebSockets Bridge
+// ==========================================
+const { Server } = require('socket.io');
+const io = new Server(server);
+global.io = io;
+
+io.on('connection', (socket) => {
+  socket.on('sendMessage', (data) => {
+    if (typeof discordBot !== 'undefined' && discordBot && discordBot.client && discordBot.client.isReady()) {
+      const channel = discordBot.client.channels.cache.get(data.channelId);
+      if (channel && channel.isTextBased()) {
+        channel.send(`**${data.username}** (Web): ${data.content}`);
+      }
+    }
+  });
+});
+
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });
