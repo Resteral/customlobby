@@ -1695,6 +1695,47 @@ if (!token || token === 'YOUR_DISCORD_BOT_TOKEN') {
 
 module.exports = {
   client,
+  getQueueStatus: (game) => {
+    if (!queues[game]) return { players: [], averageMMR: 0, required: 6 };
+    const requiredPlayers = game === 'cs' ? 10 : 6;
+    let totalMMR = 0;
+    const playerStats = queues[game].map(p => {
+      const elo = playersDb[p]?.games[game]?.elo || 1000;
+      totalMMR += elo;
+      return { username: p, elo: elo };
+    });
+    const avg = playerStats.length > 0 ? Math.floor(totalMMR / playerStats.length) : 0;
+    return { players: playerStats, averageMMR: avg, required: requiredPlayers };
+  },
+  webJoinQueue: async (username, game) => {
+    if (!queues[game]) return { success: false, error: 'Invalid game.' };
+    if (queues[game].includes(username)) return { success: false, error: 'Already in queue.' };
+    
+    registerPlayer(username);
+    queues[game].push(username);
+    const elo = playersDb[username].games[game]?.elo || 1000;
+    const limit = game === 'cs' ? 10 : 6;
+    
+    // Announce to discord
+    const channel = client.channels.cache.find(c => c.name.includes(game) && c.isTextBased());
+    if (channel) {
+      channel.send(`🌐 **${username}** (MMR: **${elo}**) joined the **${game.toUpperCase()}** queue from the Website! (${queues[game].length}/${limit} players waiting)`);
+    }
+    return { success: true };
+  },
+  webLeaveQueue: async (username, game) => {
+    if (!queues[game]) return { success: false, error: 'Invalid game.' };
+    if (!queues[game].includes(username)) return { success: false, error: 'Not in queue.' };
+    
+    queues[game] = queues[game].filter(p => p !== username);
+    
+    // Announce to discord
+    const channel = client.channels.cache.find(c => c.name.includes(game) && c.isTextBased());
+    if (channel) {
+      channel.send(`🌐 **${username}** left the ${game.toUpperCase()} queue from the Website. (${queues[game].length} players remaining)`);
+    }
+    return { success: true };
+  },
   sendAnnouncement: async (channelName, embedOptions, content) => {
     if (!client.isReady()) return false;
     const channel = client.channels.cache.find(c => c.name.includes(channelName) && c.isTextBased());

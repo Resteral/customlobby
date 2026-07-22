@@ -5264,3 +5264,113 @@ function playSlapShot() {
   }, 800);
 }
 
+
+// ==========================================
+// REAL BACKEND QUEUE INTEGRATION & SPIRE UI
+// ==========================================
+
+async function joinRealQueue() {
+  const game = appState.activeChannel || 'arkheron';
+  try {
+    const res = await fetch('/api/queue/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: appState.currentUser, game })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Joined Matchmaking Queue!', 'success');
+      playSound('join');
+      pollRealQueue();
+    } else {
+      showToast(data.error || 'Failed to join queue', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to connect to backend', 'error');
+  }
+}
+
+async function leaveRealQueue() {
+  const game = appState.activeChannel || 'arkheron';
+  try {
+    const res = await fetch('/api/queue/leave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: appState.currentUser, game })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Left Matchmaking Queue', 'info');
+      pollRealQueue();
+    } else {
+      showToast(data.error || 'Failed to leave queue', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to connect to backend', 'error');
+  }
+}
+
+let lastQueueState = { players: [], averageMMR: 0, required: 6 };
+
+async function pollRealQueue() {
+  const game = appState.activeChannel || 'arkheron';
+  try {
+    const res = await fetch('/api/queue/status?game=' + game);
+    const data = await res.json();
+    if (data.players) {
+      lastQueueState = data;
+      updateSpireUI(data);
+    }
+  } catch (err) {
+    // silently fail polling
+  }
+}
+
+function updateSpireUI(queueData) {
+  const spireContainer = document.getElementById('arkheron-spire-container');
+  const countBadge = document.getElementById('queue-count-badge');
+  
+  if (spireContainer) {
+    if (queueData.players.length > 0) {
+      spireContainer.style.display = 'flex';
+    } else {
+      spireContainer.style.display = 'none';
+      closeSpireModal();
+    }
+  }
+  
+  if (countBadge) {
+    countBadge.innerText = queueData.players.length + '/' + queueData.required + ' Players';
+  }
+  
+  // Update Modal Content if open
+  document.getElementById('spire-avg-mmr').innerText = queueData.averageMMR;
+  document.getElementById('spire-player-count').innerText = queueData.players.length + ' / ' + queueData.required;
+  
+  const listEl = document.getElementById('spire-player-list');
+  if (listEl) {
+    if (queueData.players.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; color:gray; padding:10px;">Queue is empty.</div>';
+    } else {
+      listEl.innerHTML = queueData.players.map((p, i) => 
+        '<div style="display:flex; justify-content:space-between; padding:8px; background:rgba(0,0,0,0.3); border-radius:4px; border-left: 3px solid #8b5cf6;">' +
+        '<span><strong>' + (i+1) + '.</strong> ' + p.username + '</span>' +
+        '<span style="color:#a78bfa; font-weight:bold;">' + p.elo + ' MMR</span>' +
+        '</div>'
+      ).join('');
+    }
+  }
+}
+
+function openSpireModal() {
+  document.getElementById('spire-modal').style.display = 'flex';
+  updateSpireUI(lastQueueState);
+}
+
+function closeSpireModal(e) {
+  if (e && e.target.id !== 'spire-modal') return;
+  document.getElementById('spire-modal').style.display = 'none';
+}
+
+// Start polling
+setInterval(pollRealQueue, 3000);

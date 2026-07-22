@@ -50,6 +50,71 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  // 🚀 Queue API Endpoints 🚀
+  if (urlPath === '/api/queue/status' && req.method === 'GET') {
+    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+    const game = parsedUrl.searchParams.get('game') || 'arkheron';
+    if (!discordBot) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: "Discord bot not running locally" }));
+    }
+    const status = discordBot.getQueueStatus(game);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(status));
+    return;
+  }
+
+  if (urlPath === '/api/queue/join' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        if (!discordBot) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: "Discord bot not running locally" }));
+        }
+        const result = await discordBot.webJoinQueue(payload.username, payload.game);
+        if (result.success) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: result.error }));
+        }
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: "Invalid JSON payload" }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath === '/api/queue/leave' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        if (!discordBot) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: "Discord bot not running locally" }));
+        }
+        const result = await discordBot.webLeaveQueue(payload.username, payload.game);
+        if (result.success) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: result.error }));
+        }
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: "Invalid JSON payload" }));
+      }
+    });
+    return;
+  }
 
   // ── /clicker shortcut ─────────────────────────────────────────────
   if (urlPath === '/clicker') {
