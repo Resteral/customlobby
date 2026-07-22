@@ -4,8 +4,10 @@
   "description": "Discord MMR lobby queue and 2v2 team drafting bot for HNS",
   "main": "bot.js",
   "dependencies": {
+    "cookie": "^2.0.1",
     "discord.js": "^14.15.2",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.3"
   },
   "scripts": {
     "start": "node server.js"

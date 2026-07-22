@@ -2,8 +2,14 @@ require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const cookie = require('cookie');
 
 const PORT = process.env.PORT || 3002; // Dynamically bound port for platforms like Railway or local testing
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_me_in_prod';
+const HOST_URL = process.env.HOST_URL || `http://localhost:${PORT}`;
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -19,9 +25,88 @@ const MIME_TYPES = {
 
 let discordBot = null;
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const rawPath = req.url.split('?')[0];
   const urlPath = rawPath.toLowerCase();
+
+  // 🚀 Discord OAuth2 Endpoints 🚀
+  if (urlPath === '/auth/discord' && req.method === 'GET') {
+    if (!DISCORD_CLIENT_ID) {
+      res.writeHead(500); return res.end('Discord Client ID not configured');
+    }
+    const redirectUri = encodeURIComponent(`${HOST_URL}/auth/discord/callback`);
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
+    res.writeHead(302, { Location: authUrl });
+    return res.end();
+  }
+
+  if (urlPath === '/auth/discord/callback' && req.method === 'GET') {
+    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+    const code = parsedUrl.searchParams.get('code');
+    if (!code) {
+      res.writeHead(400); return res.end('No code provided');
+    }
+
+    try {
+      const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: DISCORD_CLIENT_ID,
+          client_secret: DISCORD_CLIENT_SECRET,
+          grant_type: 'authorization_code',
+          code: code,
+          redirect_uri: `${HOST_URL}/auth/discord/callback`
+        })
+      });
+      const tokenData = await tokenRes.json();
+      
+      if (!tokenData.access_token) {
+        throw new Error('Failed to get access token');
+      }
+
+      const userRes = await fetch('https://discord.com/api/users/@me', {
+        headers: { authorization: `${tokenData.token_type} ${tokenData.access_token}` }
+      });
+      const userData = await userRes.json();
+
+      const jwtToken = jwt.sign(
+        { id: userData.id, username: userData.username, avatar: userData.avatar },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.setHeader('Set-Cookie', cookie.serialize('auth_token', jwtToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/'
+      }));
+
+      res.writeHead(302, { Location: '/' });
+      return res.end();
+    } catch (err) {
+      console.error(err);
+      res.writeHead(500); return res.end('OAuth Error');
+    }
+  }
+
+  if (urlPath === '/api/me' && req.method === 'GET') {
+    const cookies = cookie.parse(req.headers.cookie || '');
+    const token = cookies.auth_token;
+    if (!token) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Not authenticated' }));
+    }
+    try {
+      const user = jwt.verify(token, JWT_SECRET);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ user }));
+    } catch (err) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Invalid token' }));
+    }
+  }
 
   // 🚀 Discord API Bridge 🚀
   if (req.method === 'POST' && urlPath === '/api/discord/announce') {
