@@ -83,7 +83,7 @@ const server = http.createServer(async (req, res) => {
         { expiresIn: '7d' }
       );
 
-      res.setHeader('Set-Cookie', cookie.serialize('auth_token', jwtToken, {
+      res.setHeader('Set-Cookie', cookie.stringifySetCookie('auth_token', jwtToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',
@@ -100,7 +100,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (urlPath === '/api/me' && req.method === 'GET') {
-    const cookies = cookie.parse(req.headers.cookie || '');
+    const cookies = cookie.parseCookie(req.headers.cookie || '');
     const token = cookies.auth_token;
     if (!token) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
