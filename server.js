@@ -134,6 +134,22 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 🚀 Discord API Bridge 🚀
+  if (req.method === 'GET' && urlPath === '/api/discord/channels') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    if (!discordBot || !discordBot.client || !discordBot.client.isReady()) {
+      return res.end(JSON.stringify([]));
+    }
+    const guild = discordBot.client.guilds.cache.get('1503523944605683862');
+    if (!guild) {
+      return res.end(JSON.stringify([]));
+    }
+    const channels = guild.channels.cache
+      .filter(c => c.type === 0)
+      .map(c => ({ id: c.id, name: c.name, position: c.position }))
+      .sort((a, b) => a.position - b.position);
+    return res.end(JSON.stringify(channels));
+  }
+
   if (req.method === 'POST' && urlPath === '/api/discord/announce') {
     let body = '';
     req.on('data', chunk => body += chunk.toString());
