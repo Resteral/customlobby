@@ -1,5 +1,11 @@
 // ==========================================
 // CUSTOM LOBBIES MATCHMAKER PORTAL
+
+const appState = {
+  currentUser: localStorage.getItem('custom_lobbies_user') || null,
+  activeChannel: 'arkheron'
+};
+
 // ==========================================
 
 async function notifyDiscord(channel, embedData, content = null) {

@@ -186,7 +186,7 @@ main {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #313338;
+  background-color: rgba(45, 30, 33, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -223,7 +223,7 @@ main {
 .dc-server-sep {
   width: 32px;
   height: 2px;
-  background-color: #35363c;
+  background-color: rgba(60, 40, 45, 0.8);
   margin: 4px 0;
 }
 
