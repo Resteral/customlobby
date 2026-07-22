@@ -516,3 +516,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('Could not load Discord channels');
   }
 });
+
+
+// ==========================================
+// ⚔️ RANKED MATCHMAKING WIDGET LOGIC
+// ==========================================
+let widgetSelectedGame = 'cs';
+let isQueued = false;
+
+window.selectWidgetGame = function(game) {
+  if (isQueued) {
+    showToast("You cannot change games while in queue!", "error");
+    return;
+  }
+  
+  widgetSelectedGame = game;
+  
+  // Update UI
+  const selCS = document.getElementById('game-sel-cs');
+  const selArk = document.getElementById('game-sel-arkheron');
+  
+  if (game === 'cs') {
+    selCS.classList.add('active');
+    selCS.style.border = '2px solid var(--dc-brand)';
+    selCS.style.background = 'rgba(217, 119, 54, 0.1)';
+    selArk.classList.remove('active');
+    selArk.style.border = '2px solid var(--db-border)';
+    selArk.style.background = 'var(--db-bg)';
+    document.getElementById('widget-queue-max').innerText = '10';
+  } else {
+    selArk.classList.add('active');
+    selArk.style.border = '2px solid var(--dc-brand)';
+    selArk.style.background = 'rgba(217, 119, 54, 0.1)';
+    selCS.classList.remove('active');
+    selCS.style.border = '2px solid var(--db-border)';
+    selCS.style.background = 'var(--db-bg)';
+    document.getElementById('widget-queue-max').innerText = '6';
+  }
+  
+  // Later: poll queue count for specific game
+};
+
+window.toggleQueue = function() {
+  const btn = document.getElementById('btn-join-queue');
+  const statusTxt = document.getElementById('queue-status-text');
+  
+  if (!appState.currentUser) {
+    showToast("You must be logged in to join the queue!", "error");
+    return;
+  }
+  
+  if (!isQueued) {
+    // JOIN QUEUE
+    isQueued = true;
+    btn.innerHTML = '❌ LEAVE QUEUE';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-secondary');
+    btn.style.boxShadow = 'none';
+    statusTxt.style.display = 'block';
+    
+    // Simulate sending message to discord
+    if (socket) {
+      socket.emit('sendMessage', {
+        channelId: currentDiscordChannelId,
+        content: `-j ${widgetSelectedGame}`,
+        username: appState.currentUser
+      });
+    }
+    showToast(`Joined ${widgetSelectedGame.toUpperCase()} Queue!`, "success");
+    
+    // TODO: Actually tell server API to add to DB queue
+    
+  } else {
+    // LEAVE QUEUE
+    isQueued = false;
+    btn.innerHTML = '▶️ JOIN QUEUE';
+    btn.classList.remove('btn-secondary');
+    btn.classList.add('btn-primary');
+    btn.style.boxShadow = '0 0 20px rgba(217,119,54,0.4)';
+    statusTxt.style.display = 'none';
+    
+    if (socket) {
+      socket.emit('sendMessage', {
+        channelId: currentDiscordChannelId,
+        content: `-l ${widgetSelectedGame}`,
+        username: appState.currentUser
+      });
+    }
+    showToast("Left Queue.", "error");
+  }
+};
