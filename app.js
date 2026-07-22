@@ -1,3 +1,29 @@
+
+// ==========================================
+// TABS & NAVIGATION
+// ==========================================
+window.switchTab = function(tabId) {
+  document.querySelectorAll('header .tab-btn').forEach(btn => btn.classList.remove('active'));
+  const targetBtn = document.getElementById('tab-btn-' + tabId);
+  if (targetBtn) targetBtn.classList.add('active');
+
+  document.querySelectorAll('main .tab-pane').forEach(pane => pane.classList.remove('active'));
+  const targetPane = document.getElementById('pane-' + tabId);
+  if (targetPane) targetPane.classList.add('active');
+
+  const rightPanel = document.querySelector('.portal-right-panel');
+  const gridContainer = document.querySelector('.global-portal-grid');
+  if (rightPanel && gridContainer) {
+    if (tabId === 'simulator' || tabId === 'arkheron') {
+      rightPanel.style.display = 'flex';
+      gridContainer.style.gridTemplateColumns = '1fr 320px';
+    } else {
+      rightPanel.style.display = 'none';
+      gridContainer.style.gridTemplateColumns = '1fr';
+    }
+  }
+};
+
 // ==========================================
 // CUSTOM LOBBIES MATCHMAKER PORTAL
 
