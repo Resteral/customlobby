@@ -1,30 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap');
 
 :root {
-  /* Discord Theme Colors */
-  --dc-bg-main: #313338;
-  --dc-bg-sidebar: #2b2d31;
-  --dc-bg-servers: #1e1f22;
-  --dc-bg-chat: #313338;
-  --dc-bg-input: #383a40;
+  /* Dark Fantasy Theme Colors */
+  --dc-bg-main: rgba(18, 10, 13, 0.85);
+  --dc-bg-sidebar: rgba(11, 5, 7, 0.9);
+  --dc-bg-servers: rgba(6, 3, 4, 0.95);
+  --dc-bg-chat: rgba(18, 10, 13, 0.85);
+  --dc-bg-input: rgba(0, 0, 0, 0.5);
   
-  --dc-text-normal: #dbdee1;
-  --dc-text-muted: #949ba4;
-  --dc-text-link: #00a8fc;
+  --dc-text-normal: #eaddd3;
+  --dc-text-muted: #a38c82;
+  --dc-text-link: #ffc04c;
   
-  --dc-brand: #5865f2;
-  --dc-brand-hover: #4752c4;
+  --dc-brand: #d97736;
+  --dc-brand-hover: #b55f26;
   --dc-green: #23a55a;
-  --dc-yellow: #f0b232;
-  --dc-red: #f23f43;
-  --dc-border: rgba(255, 255, 255, 0.06);
+  --dc-yellow: #e8a931;
+  --dc-red: #d33c40;
+  --dc-border: rgba(217, 119, 54, 0.2);
 
   /* Dashboard Panel Accent Colors */
-  --db-bg: #0f1015;
-  --db-card: rgba(22, 24, 33, 0.75);
-  --db-primary: #8b5cf6;       /* Violet */
-  --db-secondary: #06b6d4;     /* Cyan */
-  --db-border: rgba(255, 255, 255, 0.08);
+  --db-bg: #0b0507;
+  --db-card: rgba(18, 10, 13, 0.75);
+  --db-primary: #d97736;       /* Fiery Orange */
+  --db-secondary: #e8a931;     /* Golden Yellow */
+  --db-border: rgba(232, 169, 49, 0.15);
 
   /* Typography */
   --font-sans: 'Inter', sans-serif;
@@ -42,8 +42,11 @@
 body {
   background-color: var(--db-bg);
   background-image: 
-    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.07) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.07) 0px, transparent 50%);
+    linear-gradient(to bottom, rgba(11, 5, 7, 0.4), rgba(11, 5, 7, 0.95)),
+    url('bg-spire.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   color: var(--dc-text-normal);
   font-family: var(--font-sans);
   min-height: 100vh;
