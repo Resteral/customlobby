@@ -362,7 +362,7 @@ const server = http.createServer(async (req, res) => {
 // ==========================================
 // WebSockets Bridge
 // ==========================================
-const { Server } = require('socket.io');
+
 const io = new Server(server);
 global.io = io;
 
