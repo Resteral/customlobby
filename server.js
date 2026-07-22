@@ -68,7 +68,8 @@ const server = http.createServer(async (req, res) => {
       const tokenData = await tokenRes.json();
       
       if (!tokenData.access_token) {
-        throw new Error('Failed to get access token');
+        console.error("Discord Token Error:", tokenData);
+        throw new Error(`Discord API Error: ${tokenData.error_description || tokenData.error || 'Failed to get access token'}`);
       }
 
       const userRes = await fetch('https://discord.com/api/users/@me', {
@@ -84,16 +85,17 @@ const server = http.createServer(async (req, res) => {
 
       res.setHeader('Set-Cookie', cookie.serialize('auth_token', jwtToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/'
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
       }));
 
-      res.writeHead(302, { Location: '/' });
+      res.writeHead(302, { Location: `/${userData.username}` });
       return res.end();
     } catch (err) {
       console.error(err);
-      res.writeHead(500); return res.end('OAuth Error');
+      res.writeHead(500); return res.end('OAuth Error: ' + err.message);
     }
   }
 
