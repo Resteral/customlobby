@@ -583,7 +583,7 @@ window.toggleQueue = function() {
         username: appState.currentUser
       });
     }
-    showToast(`Joined ${widgetSelectedGame.toUpperCase()} Queue!`, "success");
+    showToast(Joined  Queue!, "success"); if(typeof playSound==='function')playSound('join');
     
     // TODO: Actually tell server API to add to DB queue
     
@@ -603,6 +603,6 @@ window.toggleQueue = function() {
         username: appState.currentUser
       });
     }
-    showToast("Left Queue.", "error");
+    showToast("Left Queue.", "error"); if(typeof playSound==='function')playSound('leave');
   }
 };
