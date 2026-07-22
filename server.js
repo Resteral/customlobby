@@ -5,44 +5,53 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 
 // ==========================================
-// DATABASE INITIALIZATION
+// JSON DATABASE INITIALIZATION (Fallback to prevent Native Binding Crashes)
 // ==========================================
-const sqlite3 = require('sqlite3').verbose();
-const dbPath = path.join(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error('Error connecting to SQLite:', err);
-  else console.log('Connected to SQLite database.');
-});
-
-// Run schema
-const schemaPath = path.join(__dirname, 'schema.sql');
-if (fs.existsSync(schemaPath)) {
-  const schema = fs.readFileSync(schemaPath, 'utf8');
-  db.exec(schema, (err) => {
-    if (err) console.error('Error running schema:', err);
-  });
+const dbPath = path.join(__dirname, 'database.json');
+let db = {
+  users: [],
+  games: [
+    { id: 'cs', name: 'Counter-Strike 2', team_size: 5, draft_style: 'snake', is_active: 1 },
+    { id: 'arkheron', name: 'Arkheron', team_size: 3, draft_style: 'snake', is_active: 1 },
+    { id: 'lol', name: 'League of Legends', team_size: 5, draft_style: 'blind', is_active: 1 }
+  ],
+  matches: []
+};
+if (fs.existsSync(dbPath)) {
+  try { db = JSON.parse(fs.readFileSync(dbPath, 'utf8')); } catch(e) { console.error('Failed to parse database.json'); }
 }
-
-// Wrapper for DB queries
+const saveDb = () => fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 global.db = db;
-const runDB = (sql, params = []) => new Promise((resolve, reject) => {
-  db.run(sql, params, function (err) {
-    if (err) reject(err);
-    else resolve(this);
-  });
-});
-const getDB = (sql, params = []) => new Promise((resolve, reject) => {
-  db.get(sql, params, (err, row) => {
-    if (err) reject(err);
-    else resolve(row);
-  });
-});
-const allDB = (sql, params = []) => new Promise((resolve, reject) => {
-  db.all(sql, params, (err, rows) => {
-    if (err) reject(err);
-    else resolve(rows);
-  });
-});
+
+// Mock Wrapper for DB queries to match sqlite3 signatures so we don't have to rewrite everything
+const runDB = async (sql, params = []) => {
+  // Hacky mock for: INSERT INTO users ... ON CONFLICT DO UPDATE
+  if (sql.includes('INSERT INTO users')) {
+    const [id, username, avatar] = params;
+    let user = db.users.find(u => u.id === id);
+    if (user) {
+      user.username = username;
+      user.avatar = avatar;
+    } else {
+      db.users.push({ id, username, avatar, coins: 0, is_private: 0, created_at: Date.now() });
+    }
+    saveDb();
+  }
+};
+
+const getDB = async (sql, params = []) => {
+  if (sql.includes('SELECT * FROM users WHERE id = ?')) {
+    return db.users.find(u => u.id === params[0]) || null;
+  }
+  return null;
+};
+
+const allDB = async (sql, params = []) => {
+  if (sql.includes('SELECT * FROM games WHERE is_active = 1')) {
+    return db.games.filter(g => g.is_active === 1);
+  }
+  return [];
+};
 
 const { Server } = require('socket.io');
 const cookie = require('cookie');
@@ -157,7 +166,20 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (urlPath === '/api/me' && req.method === 'GET') {
+  
+    // Fetch Supported Games for the Universal Widget
+    if (urlPath === '/api/games' && req.method === 'GET') {
+      try {
+        const games = await allDB('SELECT * FROM games WHERE is_active = 1');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify(games));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'DB Error' }));
+      }
+    }
+
+    if (urlPath === '/api/me' && req.method === 'GET') {
     const cookies = cookie.parse(req.headers.cookie || '');
     const token = cookies.auth_token;
     if (!token) {

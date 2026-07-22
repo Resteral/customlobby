@@ -524,38 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 let widgetSelectedGame = 'cs';
 let isQueued = false;
 
-window.selectWidgetGame = function(game) {
-  if (isQueued) {
-    showToast("You cannot change games while in queue!", "error");
-    return;
-  }
-  
-  widgetSelectedGame = game;
-  
-  // Update UI
-  const selCS = document.getElementById('game-sel-cs');
-  const selArk = document.getElementById('game-sel-arkheron');
-  
-  if (game === 'cs') {
-    selCS.classList.add('active');
-    selCS.style.border = '2px solid var(--dc-brand)';
-    selCS.style.background = 'rgba(217, 119, 54, 0.1)';
-    selArk.classList.remove('active');
-    selArk.style.border = '2px solid var(--db-border)';
-    selArk.style.background = 'var(--db-bg)';
-    document.getElementById('widget-queue-max').innerText = '10';
-  } else {
-    selArk.classList.add('active');
-    selArk.style.border = '2px solid var(--dc-brand)';
-    selArk.style.background = 'rgba(217, 119, 54, 0.1)';
-    selCS.classList.remove('active');
-    selCS.style.border = '2px solid var(--db-border)';
-    selCS.style.background = 'var(--db-bg)';
-    document.getElementById('widget-queue-max').innerText = '6';
-  }
-  
-  // Later: poll queue count for specific game
-};
+/* Replaced by selectUniversalGame */
 
 window.toggleQueue = function() {
   const btn = document.getElementById('btn-join-queue');
@@ -605,4 +574,75 @@ window.toggleQueue = function() {
     }
     showToast("Left Queue.", "error"); if(typeof playSound==='function')playSound('leave');
   }
+};
+
+
+// Fetch Supported Games from DB
+let supportedGames = [];
+async function fetchSupportedGames() {
+  try {
+    const res = await fetch('/api/games');
+    supportedGames = await res.json();
+    
+    const container = document.getElementById('dynamic-game-selectors');
+    if (!container) return;
+    
+    if (supportedGames.length > 0) {
+      container.innerHTML = '';
+      supportedGames.forEach((g, idx) => {
+        const isFirst = idx === 0;
+        if (isFirst) widgetSelectedGame = g.id;
+        
+        const div = document.createElement('div');
+        div.className = 'game-selector ' + (isFirst ? 'active' : '');
+        div.id = 'game-sel-' + g.id;
+        div.style.cursor = 'pointer';
+        div.style.padding = '12px 24px';
+        div.style.borderRadius = '8px';
+        div.style.border = isFirst ? '2px solid var(--dc-brand)' : '2px solid var(--db-border)';
+        div.style.background = isFirst ? 'rgba(217, 119, 54, 0.1)' : 'var(--db-bg)';
+        
+        div.innerHTML = `
+          <div style="font-weight: bold; font-size: 1.1rem; color: white;">${g.name}</div>
+          <div style="font-size: 0.8rem; color: ${isFirst ? 'var(--dc-brand)' : 'var(--dc-text-muted)'};">${g.team_size}v${g.team_size} ${g.draft_style} Draft</div>
+        `;
+        
+        div.onclick = () => selectUniversalGame(g);
+        container.appendChild(div);
+      });
+      
+      // Init max queue count
+      document.getElementById('widget-queue-max').innerText = supportedGames[0].team_size * 2;
+    }
+  } catch(e) {
+    console.error('Failed to load games', e);
+  }
+}
+document.addEventListener('DOMContentLoaded', fetchSupportedGames);
+
+window.selectUniversalGame = function(g) {
+  if (isQueued) {
+    showToast("You cannot change games while in queue!", "error");
+    return;
+  }
+  widgetSelectedGame = g.id;
+  
+  // Update UI
+  supportedGames.forEach(game => {
+    const el = document.getElementById('game-sel-' + game.id);
+    if (!el) return;
+    if (game.id === g.id) {
+      el.classList.add('active');
+      el.style.border = '2px solid var(--dc-brand)';
+      el.style.background = 'rgba(217, 119, 54, 0.1)';
+      el.children[1].style.color = 'var(--dc-brand)';
+    } else {
+      el.classList.remove('active');
+      el.style.border = '2px solid var(--db-border)';
+      el.style.background = 'var(--db-bg)';
+      el.children[1].style.color = 'var(--dc-text-muted)';
+    }
+  });
+  
+  document.getElementById('widget-queue-max').innerText = g.team_size * 2;
 };
