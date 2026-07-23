@@ -443,20 +443,62 @@ setInterval(pollRealQueue, 3000);
 
 // Backend Auth Session Check
 async function checkAuthSession() {
-  try {
-    const res = await fetch("/api/me");
-    const data = await res.json();
-    if (data.user) {
-      appState.currentUser = data.user.username;
-      localStorage.setItem("custom_lobbies_signed_in", "true");
-      document.getElementById("login-screen").style.display = "none";
-      
-      switchTab("simulator");
-      renderLeaderboard();
-      showToast("Welcome back, " + data.user.username + "!", "success");
+    let isLoggedIn = false;
+    let username = null;
+    let avatar = null;
+
+    try {
+      const res = await fetch("/api/me");
+      const data = await res.json();
+      if (data.user) {
+        isLoggedIn = true;
+        username = data.user.username;
+        avatar = data.user.avatar;
+        appState.currentUser = username;
+        localStorage.setItem("custom_lobbies_signed_in", "true");
+        document.getElementById("login-screen").style.display = "none";
+      }
+    } catch (err) {}
+
+    // 1. Update Navbar UI based on Auth State
+    const connectBtn = document.getElementById('connect-discord-btn');
+    const profileBadge = document.getElementById('discord-profile-badge');
+    if (isLoggedIn) {
+        if (connectBtn) connectBtn.style.display = 'none';
+        if (profileBadge) {
+            profileBadge.style.display = 'flex';
+            document.getElementById('connected-username-badge').textContent = username;
+            if (avatar) {
+                document.getElementById('connected-avatar-badge').innerHTML = `<img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`;
+            }
+        }
+        showToast("Welcome back, " + username + "!", "success");
     }
-  } catch (err) {}
-}
+
+    // 2. Handle Routing based on Profile Slug or Default
+    if (typeof window.__PROFILE_SLUG__ !== 'undefined' && window.__PROFILE_SLUG__) {
+      // Direct Profile Link
+      const ls = document.getElementById('landing-screen');
+      if (ls) ls.style.display = 'none';
+
+      switchTab("profiles");
+      setTimeout(() => {
+        const searchInput = document.getElementById('profile-search-input');
+        if (searchInput) {
+          searchInput.value = window.__PROFILE_SLUG__;
+          if (typeof searchProfiles === 'function') searchProfiles(window.__PROFILE_SLUG__);
+        }
+      }, 300);
+    } else if (isLoggedIn) {
+      // Logged in at root
+      const ls = document.getElementById('landing-screen');
+      if (ls) ls.style.display = 'none';
+      switchTab("simulator");
+    }
+    
+    // Always render leaderboard in background
+    if (typeof renderLeaderboard === 'function') renderLeaderboard();
+  }
 document.addEventListener("DOMContentLoaded", checkAuthSession);
 
 
