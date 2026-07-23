@@ -91,11 +91,7 @@ function enterLobby() {
       setTimeout(() => { if (ls) ls.style.display = 'none'; }, 700);
     }, 280);
   }
-  // Show the login screen in the middle of the wipe
-  setTimeout(() => {
-    const loginScr = document.getElementById('login-screen');
-    if (loginScr) loginScr.style.display = 'flex';
-  }, 200);
+  
 }
 
 // Particle system
