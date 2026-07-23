@@ -154,7 +154,8 @@ function initLandingParticles() {
       if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
     });
 
-    if (!document.getElementById('landing-screen')?.classList.contains('land-hidden')) {
+    const lsCheck = document.getElementById('landing-screen');
+    if (lsCheck && lsCheck.style.display !== 'none' && !lsCheck.classList.contains('land-hidden')) {
       requestAnimationFrame(draw);
     }
   }
